@@ -4,32 +4,108 @@ import { Volume2, VolumeX, Waves } from "lucide-react";
 const STORAGE_KEY = "axiom-agwe-ocean-enabled";
 const AUDIO_SRC = "/sounds/ocean-waves.mp3";
 
-/** Ambiance marine non bloquante : tentative d'autoplay puis activation au premier geste. */
+type ProceduralOcean = {
+  ctx: AudioContext;
+  source: AudioBufferSourceNode;
+  gain: GainNode;
+  filter: BiquadFilterNode;
+};
+
+/** Ambiance marine : MP3 si présent, sinon texture océanique Web Audio sans dépendance externe. */
 export default function AmbientOcean() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const proceduralRef = useRef<ProceduralOcean | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [available, setAvailable] = useState(true);
 
+  const startProcedural = useCallback(async () => {
+    if (proceduralRef.current) {
+      await proceduralRef.current.ctx.resume();
+      return true;
+    }
+    const AudioContextCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextCtor) return false;
+
+    const ctx = new AudioContextCtor();
+    const bufferSize = ctx.sampleRate * 4;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    let brown = 0;
+    for (let i = 0; i < bufferSize; i += 1) {
+      const white = Math.random() * 2 - 1;
+      brown = brown * 0.985 + white * 0.15;
+      data[i] = brown;
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 900;
+    filter.Q.value = 0.7;
+
+    const gain = ctx.createGain();
+    gain.gain.value = 0.0001;
+
+    source.connect(filter).connect(gain).connect(ctx.destination);
+    source.start();
+    await ctx.resume();
+    proceduralRef.current = { ctx, source, gain, filter };
+    return true;
+  }, []);
+
+  const stopProcedural = useCallback(() => {
+    const ocean = proceduralRef.current;
+    if (!ocean) return;
+    ocean.gain.gain.cancelScheduledValues(ocean.ctx.currentTime);
+    ocean.gain.gain.setTargetAtTime(0.0001, ocean.ctx.currentTime, 0.18);
+    window.setTimeout(() => {
+      try { ocean.source.stop(); } catch { /* déjà arrêté */ }
+      void ocean.ctx.close();
+    }, 900);
+    proceduralRef.current = null;
+  }, []);
+
   const play = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio) return false;
+    if (audio) {
+      try {
+        await audio.play();
+        setEnabled(true);
+        try { localStorage.setItem(STORAGE_KEY, "1"); } catch { /* storage indisponible */ }
+        return true;
+      } catch {
+        // Autoplay refusé ou MP3 absent : fallback Web Audio après geste utilisateur.
+      }
+    }
+
     try {
-      await audio.play();
+      const ok = await startProcedural();
+      if (!ok) return false;
+      const ocean = proceduralRef.current;
+      if (ocean) {
+        const now = ocean.ctx.currentTime;
+        ocean.gain.gain.cancelScheduledValues(now);
+        ocean.gain.gain.setTargetAtTime(0.022, now, 0.8);
+      }
       setEnabled(true);
       try { localStorage.setItem(STORAGE_KEY, "1"); } catch { /* storage indisponible */ }
       return true;
     } catch {
+      setAvailable(false);
       return false;
     }
-  }, []);
+  }, [startProcedural]);
 
   const stop = useCallback(() => {
     const audio = audioRef.current;
-    if (!audio) return;
-    audio.pause();
+    if (audio) audio.pause();
+    stopProcedural();
     setEnabled(false);
     try { localStorage.setItem(STORAGE_KEY, "0"); } catch { /* storage indisponible */ }
-  }, []);
+  }, [stopProcedural]);
 
   const toggle = useCallback(() => {
     if (enabled) stop();
@@ -41,15 +117,12 @@ export default function AmbientOcean() {
     audio.loop = true;
     audio.preload = "auto";
     audio.volume = 0.16;
-    audio.addEventListener("error", () => setAvailable(false), { once: true });
     audioRef.current = audio;
 
     let wantsAmbient = true;
     try { wantsAmbient = localStorage.getItem(STORAGE_KEY) !== "0"; } catch { /* défaut activé */ }
 
-    if (wantsAmbient) {
-      void play();
-    }
+    if (wantsAmbient) void play();
 
     const unlock = () => {
       if (wantsAmbient && !enabled) void play();
@@ -68,10 +141,11 @@ export default function AmbientOcean() {
       audio.pause();
       audio.src = "";
       audioRef.current = null;
+      stopProcedural();
     };
-    // Initialisation uniquement : play est stable et l'état enabled n'est pas une dépendance volontaire.
+    // L'état enabled ne pilote pas l'installation des listeners : ils sont volontairement attachés une seule fois.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [play]);
+  }, [play, stopProcedural]);
 
   if (!available) return null;
 
