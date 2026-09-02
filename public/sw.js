@@ -1,49 +1,47 @@
-/* Axiom TV — Service Worker (PWA) : cache shell + repli hors-ligne. */
-const VERSION = "axiomtv-v1";
+/* Axiom TV — Service Worker PWA. Network-first HTML, stale-while-revalidate assets. */
+const VERSION = "axiomtv-v2";
 const CORE_CACHE = `${VERSION}-core`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
-const CORE_ASSETS = ["/", "/index.html", "/manifest.json", "/icons/icon.svg"];
+const CORE_ASSETS = ["/", "/index.html", "/manifest.json", "/icons/icon.svg", "/icons/icon-maskable.svg"];
 
-self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CORE_CACHE).then((c) => c.addAll(CORE_ASSETS)).then(() => self.skipWaiting()));
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CORE_CACHE).then((cache) => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting()));
 });
 
-self.addEventListener("activate", (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CORE_CACHE && k !== RUNTIME_CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => ![CORE_CACHE, RUNTIME_CACHE].includes(key)).map((key) => caches.delete(key)))).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("fetch", (e) => {
-  const req = e.request;
-  if (req.method !== "GET") return;
-  const url = new URL(req.url);
-  if (url.pathname.startsWith("/api/")) return;
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
 
-  if (req.mode === "navigate") {
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CORE_CACHE).then((c) => c.put("/index.html", copy)).catch(() => {});
-          return res;
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET") return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
+
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) caches.open(CORE_CACHE).then((cache) => cache.put("/index.html", response.clone())).catch(() => {});
+          return response;
         })
-        .catch(() => caches.match("/index.html").then((c) => c || Response.error()))
+        .catch(() => caches.match("/index.html").then((cached) => cached || Response.error()))
     );
     return;
   }
 
-  e.respondWith(
-    caches.match(req).then((cached) => {
-      const network = fetch(req)
-        .then((res) => {
-          if (res && (res.ok || res.type === "opaque")) {
-            const copy = res.clone();
-            caches.open(RUNTIME_CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          }
-          return res;
-        })
-        .catch(() => cached);
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      const network = fetch(request).then((response) => {
+        if (response.ok || response.type === "opaque") caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, response.clone())).catch(() => {});
+        return response;
+      }).catch(() => cached);
       return cached || network;
     })
   );
