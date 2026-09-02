@@ -16,6 +16,6 @@ output/audio/*
 output/logs/*
 output/*.mp4
 output/*.webm
-output/frames/.gitkeep
-output/audio/.gitkeep
-output/logs/.gitkeep
+!output/frames/.gitkeep
+!output/audio/.gitkeep
+!output/logs/.gitkeep
