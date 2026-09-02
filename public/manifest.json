@@ -1,0 +1,23 @@
+{
+  "id": "app.axiomtv.hub",
+  "name": "Axiom TV — Hub communautaire & Studio AgwèStream",
+  "short_name": "Axiom TV",
+  "description": "Plateforme vidéo 100 % communautaire et indépendante : directs, reportages, podcasts citoyens et studio de production IA AgwèStream.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0e14",
+  "theme_color": "#0a0e14",
+  "categories": ["news", "video", "productivity"],
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "AgwèStream — Studio IA", "short_name": "AgwèStream", "url": "/#/studio/agwestream", "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }] },
+    { "name": "Offres & Tarification", "short_name": "Offres", "url": "/#/pro", "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
+  ]
+}
