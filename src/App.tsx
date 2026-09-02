@@ -34,13 +34,14 @@ function GlobalToasts() {
 function Shell() {
   const [collapsed, setCollapsed] = useState(false);
   const boot = useStore((s) => s.boot);
+  const user = useStore((s) => s.user);
   const location = useLocation();
 
   useEffect(() => {
     void boot();
   }, [boot]);
 
-  const isAgwe = location.pathname === "/studio/agwestream";
+  const isAgwe = location.pathname === "/studio/agwestream" && Boolean(user);
 
   return (
     <div className="relative min-h-screen">
