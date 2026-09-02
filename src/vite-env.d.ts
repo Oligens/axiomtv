@@ -9,6 +9,7 @@ interface ImportMetaEnv {
   readonly VITE_AGWE_OCEAN_AUDIO_URL?: string;
   readonly VITE_AGWE_LOCALE?: string;
   readonly VITE_AGWE_FPS?: string;
+  readonly VITE_AGWE_RENDER_API_URL?: string;
 }
 
 interface ImportMeta {
