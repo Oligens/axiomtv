@@ -1,23 +1,25 @@
 {
-  "id": "app.axiomtv.hub",
+  "id": "/",
   "name": "Axiom TV — Hub communautaire & Studio AgwèStream",
   "short_name": "Axiom TV",
-  "description": "Plateforme vidéo 100 % communautaire et indépendante : directs, reportages, podcasts citoyens et studio de production IA AgwèStream.",
+  "description": "Plateforme vidéo indépendante : directs, reportages, podcasts citoyens et studio de production IA AgwèStream.",
   "lang": "fr",
   "dir": "ltr",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "orientation": "any",
   "background_color": "#0a0e14",
   "theme_color": "#0a0e14",
   "categories": ["news", "video", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
-    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icons/icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+    { "src": "/icons/icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon-maskable.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "AgwèStream — Studio IA", "short_name": "AgwèStream", "url": "/#/studio/agwestream", "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }] },
-    { "name": "Offres & Tarification", "short_name": "Offres", "url": "/#/pro", "icons": [{ "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
+    { "name": "AgwèStream — Studio IA", "short_name": "AgwèStream", "url": "/#/studio/agwestream", "icons": [{ "src": "/icons/icon.svg", "sizes": "512x512", "type": "image/svg+xml" }] },
+    { "name": "Offres & Tarification", "short_name": "Offres", "url": "/#/pro", "icons": [{ "src": "/icons/icon.svg", "sizes": "512x512", "type": "image/svg+xml" }] }
   ]
 }
