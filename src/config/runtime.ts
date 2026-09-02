@@ -11,5 +11,6 @@ export const runtimeConfig = {
     oceanAudioUrl: import.meta.env.VITE_AGWE_OCEAN_AUDIO_URL || "/sounds/ocean-waves.mp3",
     defaultLocale: import.meta.env.VITE_AGWE_LOCALE || "fr",
     defaultFps: Number(import.meta.env.VITE_AGWE_FPS || 24),
+    renderApiUrl: (import.meta.env.VITE_AGWE_RENDER_API_URL || "").replace(/\/$/, ""),
   },
 } as const;
