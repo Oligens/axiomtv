@@ -9,3 +9,13 @@ build/
 .vercel/
 .DS_Store
 Thumbs.db
+
+# Sci-Fi renderer generated artifacts
+output/frames/*
+output/audio/*
+output/logs/*
+output/*.mp4
+output/*.webm
+output/frames/.gitkeep
+output/audio/.gitkeep
+output/logs/.gitkeep
