@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="agweNeon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F2FE" />
+      <stop offset="50%" stop-color="#0072FF" />
+      <stop offset="100%" stop-color="#03001e" />
+    </linearGradient>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <style>
+    .bg-circle { fill:#0B0F19; stroke:rgba(0,242,254,.2); stroke-width:2; }
+    .letter-path { fill:none; stroke:url(#agweNeon); stroke-width:24; stroke-linecap:round; stroke-linejoin:round; filter:url(#neonGlow); stroke-dasharray:1000; stroke-dashoffset:1000; animation:drawAndPulse 4s ease-in-out infinite alternate; }
+    .inner-bar { fill:url(#agweNeon); opacity:.8; filter:url(#neonGlow); transform-box:fill-box; transform-origin:center; animation:fadeInBar 2s ease-in-out forwards; }
+    @keyframes drawAndPulse { 0% { stroke-dashoffset:1000; filter:drop-shadow(0 0 5px rgba(0,242,254,.3)); } 50% { stroke-dashoffset:0; filter:drop-shadow(0 0 20px rgba(0,242,254,.8)); } 100% { stroke-dashoffset:0; filter:drop-shadow(0 0 10px rgba(0,114,255,.5)); } }
+    @keyframes fadeInBar { 0% { opacity:0; transform:scaleX(0); } 100% { opacity:1; transform:scaleX(1); } }
+    @media (prefers-reduced-motion:reduce) { .letter-path,.inner-bar { animation:none; stroke-dashoffset:0; opacity:1; } }
+  </style>
+  <circle cx="250" cy="250" r="220" class="bg-circle" />
+  <path class="letter-path" d="M 250 100 L 380 380 L 310 380 L 285 315 L 215 315 L 190 380 L 120 380 Z" />
+  <rect x="205" y="270" width="90" height="14" rx="7" class="inner-bar" />
+  <circle cx="250" cy="210" r="16" fill="#00F2FE" filter="url(#neonGlow)">
+    <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" />
+  </circle>
+</svg>
