@@ -4,7 +4,6 @@
  */
 import { useEffect, useState } from "react";
 import { HashRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar, TopBar, BottomNav } from "./components/layout";
 import AuthModal from "./components/AuthModal";
 import { ToastStack, type Toast } from "./components/ui";
@@ -16,8 +15,8 @@ import StudioPage from "./pages/StudioPage";
 import EarningsPage from "./pages/EarningsPage";
 import CreatorProfilePage from "./pages/CreatorProfilePage";
 import { SearchPage, LoginPage, SettingsPage, PublicationsPage, NotFoundPage } from "./pages/MiscPages";
+import AmbientOcean from "./components/AmbientOcean";
 
-/* ---------- garde d'authentification ---------- */
 function Protected({ children }: { children: React.ReactNode }) {
   const user = useStore((s) => s.user);
   const location = useLocation();
@@ -25,7 +24,6 @@ function Protected({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-/* ---------- toasts globaux (pilotés par le store) ---------- */
 function GlobalToasts() {
   const toasts = useStore((s) => s.toasts);
   const dismiss = useStore((s) => s.dismissToast);
@@ -42,7 +40,6 @@ function Shell() {
 
   return (
     <div className="relative min-h-screen">
-      {/* ================= fond ambiant ================= */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div
           className="absolute inset-0"
@@ -57,7 +54,7 @@ function Shell() {
       </div>
 
       <GlobalToasts />
-
+      <AmbientOcean />
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((c) => !c)} />
       <TopBar />
 
