@@ -13,7 +13,7 @@ export class SciFiRenderer {
   private readonly audioEngine: AudioEngine;
   private readonly frameGenerator: FrameGenerator;
   private readonly videoAssembler = new VideoAssembler();
-  private readonly memoryManager = new MemoryManager();
+  private readonly memoryManager: MemoryManager;
   private readonly director = new CinemaDirector();
   private readonly cinematicProcessor = new CinematicProcessor();
   private readonly videoAnalyzer = new VideoAnalyzer();
@@ -24,6 +24,7 @@ export class SciFiRenderer {
   constructor(private readonly outputDir: string, private readonly config: RenderConfig, apiKey: string, voiceId: string) {
     this.audioEngine = new AudioEngine(outputDir, apiKey, voiceId);
     this.frameGenerator = new FrameGenerator(config.width, config.height);
+    this.memoryManager = new MemoryManager(config.maxMemoryMB ?? 3800, config.gcInterval ?? 5000);
   }
 
   async initialize(): Promise<void> {
@@ -59,15 +60,13 @@ export class SciFiRenderer {
         const batch = frameData.slice(i, i + batchSize);
         for (const frame of batch) await this.frameGenerator.generateFrame(frame, framesDir);
         this.renderProgress = 25 + ((i + batch.length) / totalFrames) * 50;
-        if (this.config.maxMemoryMB && process.memoryUsage().rss / 1024 / 1024 > this.config.maxMemoryMB) await this.memoryManager.cleanup();
+        await this.memoryManager.checkMemory();
       }
-
       const ext = this.config.outputFormat === 'webm' ? 'webm' : 'mp4';
       const assembledPath = path.join(this.outputDir, `assembled_${Date.now()}.${ext}`);
       const audioOptions: AudioMixOptions = { backgroundMusic: this.config.backgroundMusic, musicVolume: this.config.musicVolume ?? 0.3, voiceVolume: 1, fadeIn: 0.5, fadeOut: 0.5 };
       await this.videoAssembler.assembleVideo(framesDir, audioPath, assembledPath, this.config, audioOptions, { outputFormat: this.config.outputFormat });
       this.renderProgress = 90;
-
       let outputPath = assembledPath;
       if (this.config.cinematic !== false) {
         outputPath = path.join(this.outputDir, `output_${Date.now()}.${ext}`);
@@ -76,11 +75,20 @@ export class SciFiRenderer {
       }
       this.renderProgress = 100;
       const size = (await fs.stat(outputPath)).size;
-      console.log(`Cinema Engine render complete: ${outputPath} (${(size / 1024 / 1024).toFixed(2)} MB, ${(Date.now() - startTime) / 1000}s)`);
+      await fs.writeJson(path.join(this.outputDir, 'logs', 'render-report.json'), {
+        completedAt: new Date().toISOString(), outputPath, sizeBytes: size,
+        durationSeconds: audioDuration, totalFrames, fps: this.config.fps,
+        resolution: `${this.config.width}x${this.config.height}`,
+        renderTimeSeconds: (Date.now() - startTime) / 1000,
+        memory: this.memoryManager.snapshot(), shotCount: shotPlan.length,
+        vfxCount: shotPlan.reduce((sum, shot) => sum + shot.vfx.length, 0),
+      }, { spaces: 2 });
+      console.log(`Cinema Engine render complete: ${outputPath} (${(size / 1024 / 1024).toFixed(2)} MB, ${((Date.now() - startTime) / 1000).toFixed(1)}s)`);
       return outputPath;
     } finally {
       await fs.remove(framesDir).catch(() => undefined);
-      await this.videoAssembler.cleanup(); await this.frameGenerator.cleanup(); await this.memoryManager.cleanup(); this.isRendering = false;
+      await this.videoAssembler.cleanup(); await this.frameGenerator.cleanup(); await this.memoryManager.cleanup();
+      this.isRendering = false;
     }
   }
 
@@ -89,14 +97,18 @@ export class SciFiRenderer {
     for (let i = 0; i < totalFrames; i++) {
       const timestamp = i / this.config.fps;
       let accumulated = 0; let segment = script[script.length - 1];
-      for (const candidate of script) { const duration = candidate.duration ?? audioDuration / script.length; if (timestamp < accumulated + duration) { segment = candidate; break; } accumulated += duration; }
+      for (const candidate of script) {
+        const duration = candidate.duration ?? audioDuration / script.length;
+        if (timestamp < accumulated + duration) { segment = candidate; break; }
+        accumulated += duration;
+      }
       const plan = shotPlan.find((p) => p.segmentId === segment.id);
-      result.push({ index: i, timestamp, segment: { ...segment, shotType: segment.shotType ?? plan?.shotType, cameraMovement: segment.cameraMovement ?? plan?.cameraMovement, vfxElements: segment.vfxElements ?? plan?.vfx }, phoneme: findTiming(phonemes, timestamp), wordTiming: findTiming(wordTimings, timestamp), shot: plan });
+      result.push({ index: i, timestamp, segment: { ...segment, shotType: segment.shotType ?? plan?.shotType, cameraMovement: segment.cameraMovement ?? plan?.cameraMovement, vfxElements: segment.vfxElements ?? plan?.vfx, visualMotifs: segment.visualMotifs ?? plan?.visualMotifs }, phoneme: findTiming(phonemes, timestamp), wordTiming: findTiming(wordTimings, timestamp), shot: plan });
     }
     return result;
   }
 
-  async cancel(): Promise<void> { if (this.isRendering) { this.cancelRequested = true; this.videoAssembler.cancel(); await this.cleanup(); } }
+  async cancel(): Promise<void> { if (this.isRendering) { this.cancelRequested = true; this.videoAssembler.cancel(); await this.cleanup(); this.isRendering = false; } }
   getProgress(): number { return this.renderProgress; }
   isRenderingVideo(): boolean { return this.isRendering; }
   private async cleanup(): Promise<void> { await fs.remove(path.join(this.outputDir, 'frames')).catch(() => undefined); await this.videoAssembler.cleanup(); await this.memoryManager.cleanup(); }
