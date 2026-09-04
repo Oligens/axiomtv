@@ -33,6 +33,16 @@ export default function EarningsPage() {
   const withdrawn = Math.abs(txs.filter((t) => t.kind === "withdrawal").reduce((n, t) => n + t.amount, 0));
   const available = total - withdrawn;
   const subscribers = 0;
+  const revenueSeries = Object.entries(
+    txs.filter((t) => t.kind !== "withdrawal").reduce<Record<string, number>>((acc, t) => {
+      const key = t.date.slice(0, 7);
+      acc[key] = (acc[key] ?? 0) + t.amount;
+      return acc;
+    }, {})
+  ).sort(([a], [b]) => a.localeCompare(b)).map(([key, value]) => ({
+    m: new Date(`${key}-01T00:00:00Z`).toLocaleDateString("fr-FR", { month: "short" }),
+    v: value,
+  }));
 
   const doWithdraw = () => {
     const amt = parseFloat(withdrawAmount);
