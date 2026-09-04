@@ -176,21 +176,6 @@ export interface Transaction {
   gateway?: string;
 }
 
-export const DEMO_TRANSACTIONS: Transaction[] = [
-  { id: "t1", kind: "subscription", label: "Abonnements mensuels (412 actifs)", amount: 1842.6, date: "2026-02-01", status: "completed" },
-  { id: "t2", kind: "ppv", label: "Ventes « L'affaire des eaux troubles »", amount: 934.2, date: "2026-01-28", status: "completed" },
-  { id: "t3", kind: "tip", label: "Dons pendant « Nuit de l'assemblée »", amount: 486.9, date: "2026-01-26", status: "completed" },
-  { id: "t4", kind: "withdrawal", label: "Retrait vers MonCash •• 4821", amount: -1200, date: "2026-01-24", status: "completed", gateway: "moncash" },
-  { id: "t5", kind: "subscription", label: "Abonnements mensuels (388 actifs)", amount: 1720.1, date: "2026-01-01", status: "completed" },
-  { id: "t6", kind: "ppv", label: "Ventes « Dernière Édition »", amount: 512.4, date: "2025-12-22", status: "completed" },
-  { id: "t7", kind: "withdrawal", label: "Retrait vers Stripe •• acct", amount: -2000, date: "2025-12-20", status: "completed", gateway: "stripe" },
-];
-
-export const REVENUE_SERIES = [
-  { m: "Sep", v: 1240 }, { m: "Oct", v: 1418 }, { m: "Nov", v: 1662 },
-  { m: "Déc", v: 2232 }, { m: "Jan", v: 3153 }, { m: "Fév", v: 1842 },
-];
-
 /* ================= Notifications ================= */
 export interface AppNotification {
   id: string;
