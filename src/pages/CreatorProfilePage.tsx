@@ -38,7 +38,8 @@ export default function CreatorProfilePage() {
   const navigate = useNavigate();
   const user = useStore((s) => s.user);
   const openAuth = useStore((s) => s.openAuth);
-  const toast = useStore((s) => s.toast);\n  const publications = useStore((s) => s.publications);
+  const toast = useStore((s) => s.toast);
+  const publications = useStore((s) => s.publications);
 
   const creator = undefined;
   const isOwner = !!user && user.username === handle;
