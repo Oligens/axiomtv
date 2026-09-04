@@ -10,7 +10,7 @@ import {
   BadgeCheck, Crown, Eye, Film, Gift, Globe, Instagram, Linkedin, Link as LinkIcon,
   Mail, MessageSquare, Plus, Rss, Send, Share2, Trash2, Youtube,
 } from "lucide-react";
-import { CREATORS, TIER_LABEL, VIDEOS, formatViews, type Creator, type Tier } from "../data/axiom";
+import { TIER_LABEL, type Tier, type Video } from "../data/axiom";
 import { useStore } from "../store/useStore";
 import VideoCard from "../components/VideoCard";
 
@@ -38,9 +38,9 @@ export default function CreatorProfilePage() {
   const navigate = useNavigate();
   const user = useStore((s) => s.user);
   const openAuth = useStore((s) => s.openAuth);
-  const toast = useStore((s) => s.toast);
+  const toast = useStore((s) => s.toast);\n  const publications = useStore((s) => s.publications);
 
-  const creator: Creator | undefined = useMemo(() => CREATORS.find((c) => c.handle === handle), [handle]);
+  const creator = undefined;
   const isOwner = !!user && user.username === handle;
 
   const [links, setLinks] = useState<SocialLink[]>([
@@ -53,7 +53,7 @@ export default function CreatorProfilePage() {
   const [subscribed, setSubscribed] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
 
-  const videos = VIDEOS.filter((v) => v.creator === creator?.name || (isOwner && v.creator === user?.displayName)).slice(0, 8);
+  const videos: Video[] = useMemo(() => isOwner ? publications.map((p) => ({ id: p.id, title: p.title, creator: user?.displayName ?? "", creatorRole: "Créateur", verified: user?.verified ?? false, category: "courts", duration: "—", views: p.views, published: new Date(p.createdAt).toISOString(), art: { g: "from-[#0d2233] via-[#0a1424] to-[#0d1117]", motif: "scan", glow: "rgba(0,229,255,0.20)" }, description: "" })) : [], [isOwner, publications, user]);
 
   if (!creator && !isOwner) {
     return (
@@ -74,10 +74,10 @@ export default function CreatorProfilePage() {
   const role = creator?.role ?? "Citoyen journaliste";
   const bio = creator?.bio ?? user?.bio ?? "";
   const verified = creator?.verified ?? false;
-  const followers = creator?.followers ?? 0;
+  const followers = 0;
   const hue = creator?.hue ?? "#00e5ff";
   const hueTo = creator?.hueTo ?? "#9d4edd";
-  const tier: Tier = isOwner ? (user?.tier ?? "free") : "pro";
+  const tier: Tier = user?.tier ?? "free";
 
   const addLink = () => {
     if (!newUrl.trim()) return;
@@ -137,7 +137,7 @@ export default function CreatorProfilePage() {
               </span>
             </div>
             <p className="mt-1 text-[12.5px] font-semibold text-fog">
-              @{handle} · {role} · <span className="text-cyan">{formatViews(followers)} abonnés</span> · {videos.length} publications
+              @{handle} · {role} · <span className="text-cyan">{followers} abonnés</span> · {videos.length} publications
             </p>
           </div>
 
