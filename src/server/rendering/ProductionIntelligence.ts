@@ -46,9 +46,8 @@ export interface ProductionPlan {
 
 /**
  * Lightweight, deterministic orchestration layer.
- * It is deliberately dependency-free: the expensive generation is delegated to
- * the configured cloud/video engines while Node remains responsible for planning,
- * continuity, timing and FFmpeg execution.
+ * Expensive generation is delegated to configured cloud/video engines while Node
+ * remains responsible for planning, continuity, timing and FFmpeg execution.
  */
 export class ProductionIntelligence {
   plan(script: ScriptSegment[]): ProductionPlan {
@@ -68,7 +67,6 @@ export class ProductionIntelligence {
       continuity.characters = unique([...continuity.characters, segment.character].filter(Boolean));
       continuity.environments = unique([...continuity.environments, environment]);
       continuity.motifs = motifs;
-
       if (analysis.sciFi || vfx.length > 0) continuity.palette = ['deep-blue', 'cyan', 'violet', 'black'];
 
       const duration = segment.duration && segment.duration > 0 ? segment.duration : 3;
@@ -91,7 +89,13 @@ export class ProductionIntelligence {
         duration,
         intensity: analysis.intensity,
         environment,
-        continuity: { ...continuity, characters: [...continuity.characters], environments: [...continuity.environments], motifs: [...continuity.motifs], palette: [...continuity.palette] },
+        continuity: {
+          ...continuity,
+          characters: [...continuity.characters],
+          environments: [...continuity.environments],
+          motifs: [...continuity.motifs],
+          palette: [...continuity.palette],
+        },
         engines: selectEngines(segment, analysis, vfx),
         vfx,
         prompt,
@@ -113,16 +117,26 @@ export class ProductionIntelligence {
 
 function analyzeSegment(segment: ScriptSegment): SemanticAnalysis {
   const text = normalize([segment.text, segment.sceneDescription ?? '', ...(segment.vfxElements ?? [])].join(' '));
-  const sciFi = hasAny(text, ['space', 'galaxy', 'planet', 'starship', 'robot', 'android', 'cyber', 'hologram', 'laser', 'portal', 'alien', 'station', 'espace', 'galaxie', 'planete', 'vaisseau', 'robot', 'androide', 'cyber', 'hologramme', 'laser', 'portail', 'extraterrestre', 'station']);
-  const danger = hasAny(text, ['attack', 'explosion', 'war', 'combat', 'chase', 'danger', 'panic', 'attaque', 'explosion', 'guerre', 'combat', 'poursuite', 'danger', 'panique']);
-  const spectacle = hasAny(text, ['galaxy', 'planet', 'city', 'storm', 'space', 'galaxie', 'planete', 'ville', 'orage', 'espace']);
+  const sciFi = hasAny(text, [
+    'space', 'galaxy', 'planet', 'starship', 'robot', 'android', 'cyber', 'hologram', 'laser', 'portal', 'alien', 'station',
+    'espace', 'galaxie', 'planete', 'vaisseau', 'robot', 'androide', 'cyber', 'hologramme', 'laser', 'portail', 'extraterrestre', 'station',
+  ]);
+  const danger = hasAny(text, [
+    'attack', 'explosion', 'war', 'combat', 'chase', 'danger', 'panic',
+    'attaque', 'explosion', 'guerre', 'combat', 'poursuite', 'danger', 'panique',
+  ]);
+  const spectacle = hasAny(text, [
+    'galaxy', 'planet', 'city', 'storm', 'space',
+    'galaxie', 'planete', 'ville', 'orage', 'espace',
+  ]);
+
   return {
     segmentId: segment.id,
     entities: segment.character ? [segment.character] : [],
     actions: danger ? ['high-action'] : spectacle ? ['environment-reveal'] : ['dialogue-or-observation'],
     environment: inferEnvironmentTokens(text),
     emotions: [segment.emotion],
-    keywords: text.split(/\\s+/).filter((x) => x.length > 3).slice(0, 24),
+    keywords: text.split(/\s+/).filter((x) => x.length > 3).slice(0, 24),
     intensity: clamp((danger ? 0.9 : spectacle ? 0.65 : 0.4) + (segment.emotion === 'angry' ? 0.1 : 0), 0.2, 1),
     sciFi,
   };
@@ -131,7 +145,7 @@ function analyzeSegment(segment: ScriptSegment): SemanticAnalysis {
 function chooseShot(a: SemanticAnalysis, index: number): ShotType {
   if (a.intensity > 0.82) return 'wide';
   if (a.actions.includes('environment-reveal')) return 'extreme-wide';
-  if (a.emotions[0] === 'sad' || a.emotions[0] === 'fear') return 'close-up';
+  if (a.emotions[0] === 'sad' || a.emotions[0] === 'surprised') return 'close-up';
   return index % 3 === 0 ? 'medium' : 'wide';
 }
 
@@ -172,7 +186,7 @@ function inferVfx(a: SemanticAnalysis): string[] {
   if (a.sciFi) result.push('atmospheric-haze');
   if (hasAny(a.keywords.join(' '), ['hologram', 'hologramme'])) result.push('hologram', 'scanlines');
   if (hasAny(a.keywords.join(' '), ['laser'])) result.push('laser-light');
-  if (hasAny(a.keywords.join(' '), ['explosion', 'explosion'])) result.push('embers', 'screen-shake');
+  if (hasAny(a.keywords.join(' '), ['explosion'])) result.push('embers', 'screen-shake');
   return unique(result);
 }
 
@@ -191,8 +205,19 @@ function selectEngines(segment: ScriptSegment, a: SemanticAnalysis, vfx: string[
   return unique(engines);
 }
 
-function buildPrompt(segment: ScriptSegment, environment: string, shotType: ShotType, camera: CameraMovement, vfx: string[], continuity: ContinuityState, previous?: ProductionShot): string {
-  const continuityHint = previous ? 'Maintain exact character identity, wardrobe, environment geometry and lighting continuity from the previous shot.' : 'Establish the visual identity of the scene clearly.';
+function buildPrompt(
+  segment: ScriptSegment,
+  environment: string,
+  shotType: ShotType,
+  camera: CameraMovement,
+  vfx: string[],
+  continuity: ContinuityState,
+  previous?: ProductionShot,
+): string {
+  const continuityHint = previous
+    ? 'Maintain exact character identity, wardrobe, environment geometry and lighting continuity from the previous shot.'
+    : 'Establish the visual identity of the scene clearly.';
+
   return [
     'Cinematic science-fiction production shot.',
     segment.character ? `Character: ${segment.character}.` : '',
@@ -208,7 +233,7 @@ function buildPrompt(segment: ScriptSegment, environment: string, shotType: Shot
 }
 
 function normalize(value: string): string {
-  return value.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '');
+  return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 function hasAny(text: string, terms: string[]): boolean { return terms.some((term) => text.includes(normalize(term))); }
 function unique<T>(values: T[]): T[] { return [...new Set(values)]; }
