@@ -279,7 +279,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
               </span>
               <span className={label}>{c.label}</span>
               {c.id === "directs" && (
-                <span className={`rounded-full border border-coral/40 bg-coral/15 px-2 py-0.5 font-display text-[9.5px] font-bold text-coral ${collapsed ? "hidden" : "ml-auto hidden lg:inline"}`}>2 LIVE</span>
+                <span className={`rounded-full border border-coral/40 bg-coral/15 px-2 py-0.5 font-display text-[9.5px] font-bold text-coral ${collapsed ? "hidden" : "ml-auto hidden lg:inline"}`}>LIVE</span>
               )}
             </Link>
           );
