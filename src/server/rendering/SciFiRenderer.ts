@@ -7,7 +7,7 @@ import { MemoryManager } from './MemoryManager';
 import { CinemaDirector } from './CinemaDirector';
 import { CinematicProcessor } from './CinematicProcessor';
 import { VideoAnalyzer } from './VideoAnalyzer';
-import { ProductionIntelligence } from './ProductionIntelligence';
+import { ProductionIntelligence, toShotPlans, type ProductionPlan } from './ProductionIntelligence';
 import type { FrameData, Phoneme, RenderConfig, ScriptSegment, WordTiming } from './types';
 
 export class SciFiRenderer {
@@ -37,7 +37,7 @@ export class SciFiRenderer {
     ]);
   }
 
-  async render(script: ScriptSegment[]): Promise<string> {
+  async render(script: ScriptSegment[], preparedPlan?: ProductionPlan): Promise<string> {
     if (this.isRendering) throw new Error('Render already in progress');
     if (!script.length) throw new Error('Cannot render an empty script');
     await this.initialize();
@@ -53,10 +53,10 @@ export class SciFiRenderer {
         await fs.writeJson(path.join(this.outputDir, 'logs', 'source-analysis.json'), analysis, { spaces: 2 });
       }
 
-      const productionPlan = this.productionIntelligence.plan(script);
+      const productionPlan = preparedPlan ?? this.productionIntelligence.plan(script);
       await fs.writeJson(path.join(this.outputDir, 'logs', 'production-plan.json'), productionPlan, { spaces: 2 });
 
-      const shotPlan = this.director.plan(script);
+      const shotPlan = preparedPlan ? toShotPlans(productionPlan) : this.director.plan(script);
       await fs.writeJson(path.join(this.outputDir, 'logs', 'shot-plan.json'), shotPlan, { spaces: 2 });
 
       const text = script.map((s) => s.text.trim()).filter(Boolean).join(' ');
