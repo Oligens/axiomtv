@@ -46,8 +46,58 @@ export default function CreatorProfilePage() {
   const addProfileLink = useStore((s) => s.addProfileLink);
   const deleteProfileLink = useStore((s) => s.deleteProfileLink);
 
-  const creator = undefined;
+  const [creator, setCreator] = useState<PublicCreator | null>(null);
+  const [publicLinks, setPublicLinks] = useState<SocialLink[]>([]);
+  const [publicVideos, setPublicVideos] = useState<Video[]>([]);
+  const [followers, setFollowers] = useState(0);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
   const isOwner = !!user && !!handle && user.username.toLowerCase() === handle.replace(/^@/, "").toLowerCase() && (!creator || creator.username.toLowerCase() === user.username.toLowerCase());
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoadingProfile(true);
+      setProfileError(null);
+      if (!apiEnabled()) {
+        if (user && user.username.toLowerCase() === (handle ?? "").replace(/^@/, "").toLowerCase()) {
+          setCreator({ id: user.id ?? -1, name: user.displayName, username: user.username, bio: user.bio, tier: user.tier, verified: user.verified, avatarUrl: user.avatarUrl, bannerUrl: user.bannerUrl });
+        }
+        setLoadingProfile(false);
+        return;
+      }
+      try {
+        const base = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/+$/, "");
+        const response = await fetch(`${base}/api/creator/${encodeURIComponent(handle ?? "")}`);
+        if (!response.ok) throw new Error(response.status === 404 ? "Antenne introuvable" : "Impossible de charger le profil");
+        const data = await response.json() as {
+          creator: PublicCreator;
+          links: Array<{ id: number; platform: string; url: string }>;
+          videos: Array<{ id: string; title: string; category: string; views: number; createdAt: string }>;
+          stats?: { subscribers?: number };
+        };
+        if (cancelled) return;
+        setCreator(data.creator);
+        setFollowers(Number(data.stats?.subscribers) || 0);
+        setPublicLinks(data.links.map((l) => ({ id: l.id, platform: l.platform, url: l.url })));
+        setPublicVideos(data.videos.map((v) => ({
+          id: v.id, title: v.title, creator: data.creator.name, creatorRole: data.creator.role ?? "Créateur",
+          verified: data.creator.verified,
+          category: (["directs", "reportages", "conferences", "podcasts", "courts"].includes(v.category) ? v.category : "courts") as Video["category"],
+          duration: "—", views: Number(v.views) || 0, published: v.createdAt,
+          art: { g: "from-[#0d2233] via-[#0a1424] to-[#0d1117]", motif: "scan", glow: "rgba(0,229,255,0.20)" },
+          description: "",
+        })));
+      } catch (e) {
+        if (!cancelled) setProfileError(e instanceof Error ? e.message : "Impossible de charger le profil");
+      } finally {
+        if (!cancelled) setLoadingProfile(false);
+      }
+    };
+    void load();
+    return () => { cancelled = true; };
+  }, [handle, user]);
 
   const [links, setLinks] = useState<SocialLink[]>([]);
   const [adding, setAdding] = useState(false);
@@ -89,8 +139,8 @@ export default function CreatorProfilePage() {
   const hue = creator?.hue ?? "#00e5ff";
   const hueTo = creator?.hueTo ?? "#9d4edd";
   const tier: Tier = creator?.tier ?? user?.tier ?? "free";
-  const avatarUrl = creator?.id ? undefined : user?.avatarUrl;
-  const bannerUrl = creator?.id ? undefined : user?.bannerUrl;
+  const avatarUrl = creator?.avatarUrl ?? user?.avatarUrl;
+  const bannerUrl = creator?.bannerUrl ?? user?.bannerUrl;
 
   const saveProfile = () => {
     if (!isOwner || !user) return;
