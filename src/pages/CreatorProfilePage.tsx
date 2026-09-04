@@ -154,17 +154,20 @@ export default function CreatorProfilePage() {
 
   const addLink = () => {
     if (!isOwner || !newUrl.trim()) return;
+    if (!apiEnabled()) {
+      setLinks((l) => [...l, { id: Date.now(), platform: newPlatform, url: newUrl.trim() }]);
+      setNewUrl("");
+      setAdding(false);
+      toast("Lien ajouté à l’antenne", "ok");
+      return;
+    }
     void addProfileLink({
       platform: newPlatform,
       label: PLATFORMS.find((p) => p.id === newPlatform)?.label ?? newPlatform,
       url: newUrl.trim(),
     }).then((result) => {
-      if (!result) {
-        toast("Lien ajouté à l’antenne", "ok");
-        return;
-      }
-      const persistedId = Number(result);
-      setLinks((l) => [...l, { id: Number.isFinite(persistedId) ? persistedId : Date.now(), platform: newPlatform, url: newUrl.trim() }]);
+      if (!result) { toast("Impossible d’ajouter le lien", "warn"); return; }
+      setLinks((l) => [...l, { id: Number(result), platform: newPlatform, url: newUrl.trim() }]);
       setNewUrl("");
       setAdding(false);
       toast("Lien ajouté à l’antenne", "ok");
