@@ -1,4 +1,5 @@
 import type { CameraMovement, ScriptSegment, ShotType, VisualPrompt } from './types';
+import type { ShotPlan } from './CinemaDirector';
 
 export type ProductionEngine = 'cloud-video' | 'image' | 'ffmpeg' | 'audio' | 'upscale' | 'vfx';
 
@@ -12,14 +13,12 @@ export interface SemanticAnalysis {
   intensity: number;
   sciFi: boolean;
 }
-
 export interface ContinuityState {
   characters: string[];
   environments: string[];
   motifs: string[];
   palette: string[];
 }
-
 export interface ProductionShot {
   segmentId: number;
   shotType: ShotType;
@@ -32,23 +31,13 @@ export interface ProductionShot {
   vfx: string[];
   prompt: VisualPrompt;
 }
-
 export interface ProductionPlan {
   version: 1;
   generatedAt: string;
   shots: ProductionShot[];
-  globalStyle: {
-    genre: 'sci-fi';
-    visualLanguage: string;
-    palette: string[];
-  };
+  globalStyle: { genre: 'sci-fi'; visualLanguage: string; palette: string[] };
 }
 
-/**
- * Lightweight, deterministic orchestration layer.
- * Expensive generation is delegated to configured cloud/video engines while Node
- * remains responsible for planning, continuity, timing and FFmpeg execution.
- */
 export class ProductionIntelligence {
   plan(script: ScriptSegment[]): ProductionPlan {
     const shots: ProductionShot[] = [];
@@ -89,13 +78,7 @@ export class ProductionIntelligence {
         duration,
         intensity: analysis.intensity,
         environment,
-        continuity: {
-          ...continuity,
-          characters: [...continuity.characters],
-          environments: [...continuity.environments],
-          motifs: [...continuity.motifs],
-          palette: [...continuity.palette],
-        },
+        continuity: { ...continuity, characters: [...continuity.characters], environments: [...continuity.environments], motifs: [...continuity.motifs], palette: [...continuity.palette] },
         engines: selectEngines(segment, analysis, vfx),
         vfx,
         prompt,
@@ -115,21 +98,34 @@ export class ProductionIntelligence {
   }
 }
 
+export function toShotPlans(plan: ProductionPlan): ShotPlan[] {
+  return plan.shots.map((shot, index) => ({
+    segmentId: shot.segmentId,
+    shotType: shot.shotType,
+    cameraMovement: shot.cameraMovement,
+    intensity: shot.intensity,
+    lighting: normalizeLighting(shot.prompt.lighting),
+    transition: index === 0 ? 'fade' : shot.intensity > 0.8 ? 'cut' : 'dissolve',
+    vfx: shot.vfx,
+    pacing: shot.intensity > 0.8 ? 'fast' : shot.intensity < 0.45 ? 'slow' : 'normal',
+    dramaticBeat: shot.intensity > 0.8,
+    visualMotifs: shot.continuity.motifs,
+  }));
+}
+
+function normalizeLighting(value: string): ShotPlan['lighting'] {
+  const text = value.toLowerCase();
+  if (text.includes('neon')) return 'neon';
+  if (text.includes('low-key')) return 'low-key';
+  if (text.includes('high-key')) return 'high-key';
+  return 'neutral';
+}
+
 function analyzeSegment(segment: ScriptSegment): SemanticAnalysis {
   const text = normalize([segment.text, segment.sceneDescription ?? '', ...(segment.vfxElements ?? [])].join(' '));
-  const sciFi = hasAny(text, [
-    'space', 'galaxy', 'planet', 'starship', 'robot', 'android', 'cyber', 'hologram', 'laser', 'portal', 'alien', 'station',
-    'espace', 'galaxie', 'planete', 'vaisseau', 'robot', 'androide', 'cyber', 'hologramme', 'laser', 'portail', 'extraterrestre', 'station',
-  ]);
-  const danger = hasAny(text, [
-    'attack', 'explosion', 'war', 'combat', 'chase', 'danger', 'panic',
-    'attaque', 'explosion', 'guerre', 'combat', 'poursuite', 'danger', 'panique',
-  ]);
-  const spectacle = hasAny(text, [
-    'galaxy', 'planet', 'city', 'storm', 'space',
-    'galaxie', 'planete', 'ville', 'orage', 'espace',
-  ]);
-
+  const sciFi = hasAny(text, ['space','galaxy','planet','starship','robot','android','cyber','hologram','laser','portal','alien','station','espace','galaxie','planete','vaisseau','androide','hologramme','portail','extraterrestre']);
+  const danger = hasAny(text, ['attack','explosion','war','combat','chase','danger','panic','attaque','explosion','guerre','combat','poursuite','danger','panique']);
+  const spectacle = hasAny(text, ['galaxy','planet','city','storm','space','galaxie','planete','ville','orage','espace']);
   return {
     segmentId: segment.id,
     entities: segment.character ? [segment.character] : [],
@@ -148,13 +144,11 @@ function chooseShot(a: SemanticAnalysis, index: number): ShotType {
   if (a.emotions[0] === 'sad' || a.emotions[0] === 'surprised') return 'close-up';
   return index % 3 === 0 ? 'medium' : 'wide';
 }
-
 function chooseCamera(a: SemanticAnalysis, index: number): CameraMovement {
   if (a.intensity > 0.82) return 'slow-push';
   if (a.actions.includes('environment-reveal')) return index % 2 ? 'pan-right' : 'pan-left';
   return 'static';
 }
-
 function inferEnvironment(a: SemanticAnalysis): string {
   if (a.environment.includes('space')) return 'deep-space environment with stars and subtle nebulae';
   if (a.environment.includes('urban')) return 'futuristic urban environment with controlled neon lighting';
@@ -162,15 +156,13 @@ function inferEnvironment(a: SemanticAnalysis): string {
   if (a.sciFi) return 'cinematic futuristic interior with believable technology';
   return 'cinematic grounded environment';
 }
-
 function inferEnvironmentTokens(text: string): string[] {
   const result: string[] = [];
-  if (hasAny(text, ['space', 'galaxy', 'planet', 'star', 'espace', 'galaxie', 'planete', 'etoile'])) result.push('space');
-  if (hasAny(text, ['city', 'street', 'ville', 'rue', 'cyberpunk'])) result.push('urban');
-  if (hasAny(text, ['ocean', 'sea', 'water', 'mer', 'eau'])) result.push('water');
+  if (hasAny(text, ['space','galaxy','planet','star','espace','galaxie','planete','etoile'])) result.push('space');
+  if (hasAny(text, ['city','street','ville','rue','cyberpunk'])) result.push('urban');
+  if (hasAny(text, ['ocean','sea','water','mer','eau'])) result.push('water');
   return result;
 }
-
 function inferMotifs(a: SemanticAnalysis): string[] {
   return unique([
     ...(a.sciFi ? ['technology', 'cinematic-sci-fi'] : []),
@@ -179,23 +171,20 @@ function inferMotifs(a: SemanticAnalysis): string[] {
     ...(a.environment.includes('water') ? ['water'] : []),
   ]);
 }
-
 function inferVfx(a: SemanticAnalysis): string[] {
   const result: string[] = [];
   if (a.environment.includes('space')) result.push('starfield', 'lens-flare');
   if (a.sciFi) result.push('atmospheric-haze');
-  if (hasAny(a.keywords.join(' '), ['hologram', 'hologramme'])) result.push('hologram', 'scanlines');
+  if (hasAny(a.keywords.join(' '), ['hologram','hologramme'])) result.push('hologram', 'scanlines');
   if (hasAny(a.keywords.join(' '), ['laser'])) result.push('laser-light');
   if (hasAny(a.keywords.join(' '), ['explosion'])) result.push('embers', 'screen-shake');
   return unique(result);
 }
-
 function inferLighting(segment: ScriptSegment, a: SemanticAnalysis): string {
   if (a.sciFi) return 'motivated cyan-blue neon with volumetric rim light';
   if (segment.emotion === 'sad' || segment.emotion === 'angry') return 'low-key cinematic lighting';
   return 'natural cinematic key light with controlled contrast';
 }
-
 function selectEngines(segment: ScriptSegment, a: SemanticAnalysis, vfx: string[]): ProductionEngine[] {
   const engines: ProductionEngine[] = [];
   if (segment.backgroundImage || segment.sceneDescription || a.sciFi) engines.push('image');
@@ -204,20 +193,10 @@ function selectEngines(segment: ScriptSegment, a: SemanticAnalysis, vfx: string[
   if (segment.backgroundMusic) engines.push('audio');
   return unique(engines);
 }
-
-function buildPrompt(
-  segment: ScriptSegment,
-  environment: string,
-  shotType: ShotType,
-  camera: CameraMovement,
-  vfx: string[],
-  continuity: ContinuityState,
-  previous?: ProductionShot,
-): string {
+function buildPrompt(segment: ScriptSegment, environment: string, shotType: ShotType, camera: CameraMovement, vfx: string[], continuity: ContinuityState, previous?: ProductionShot): string {
   const continuityHint = previous
     ? 'Maintain exact character identity, wardrobe, environment geometry and lighting continuity from the previous shot.'
     : 'Establish the visual identity of the scene clearly.';
-
   return [
     'Cinematic science-fiction production shot.',
     segment.character ? `Character: ${segment.character}.` : '',
@@ -231,10 +210,7 @@ function buildPrompt(
     `Action/dialogue: ${segment.text}`,
   ].filter(Boolean).join(' ');
 }
-
-function normalize(value: string): string {
-  return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
+function normalize(value: string): string { return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function hasAny(text: string, terms: string[]): boolean { return terms.some((term) => text.includes(normalize(term))); }
 function unique<T>(values: T[]): T[] { return [...new Set(values)]; }
 function clamp(value: number, min: number, max: number): number { return Math.min(max, Math.max(min, value)); }
