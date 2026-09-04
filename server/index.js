@@ -164,7 +164,23 @@ app.get("/api/creator/:username", wrap(async (req, res) => {
   const links = await pool.query('SELECT id, platform, label, url FROM creator_links WHERE user_id=$1 ORDER BY created_at LIMIT 12', [creator.id]);
   const subs = await pool.query("SELECT COUNT(*)::int AS n FROM subscriptions WHERE creator_username=$1 AND status='active'", [username]);
   const videos = await pool.query('SELECT id, title, category, resolution, status, views, created_at AS "createdAt" FROM agwestream_videos WHERE user_id=$1 ORDER BY created_at DESC LIMIT 60', [creator.id]);
-  res.json({ creator: { ...publicUser(creator), bannerUrl: creator.banner_url || null, aboutText: creator.about_text || "", charter: creator.charter || "" }, links: links.rows, videos: videos.rows, stats: { subscribers: subs.rows[0].n } });
+  res.json({
+    creator: {
+      id: creator.id,
+      username: creator.username,
+      name: creator.name,
+      bio: creator.bio || "",
+      tier: creator.tier,
+      verified: !!creator.verified,
+      avatarUrl: creator.avatar_url || null,
+      bannerUrl: creator.banner_url || null,
+      aboutText: creator.about_text || "",
+      charter: creator.charter || "",
+    },
+    links: links.rows,
+    videos: videos.rows,
+    stats: { subscribers: subs.rows[0].n },
+  });
 }));
 
 /* ================= revenus & paiements ================= */
