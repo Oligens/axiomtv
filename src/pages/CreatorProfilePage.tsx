@@ -25,7 +25,9 @@ const PLATFORMS: { id: string; label: string; icon: React.ReactNode; placeholder
   { id: "mail", label: "Email", icon: <Mail size={13} />, placeholder: "mailto:contact@media.org" },
 ];
 
-interface PublicCreator { id: number; name: string; username: string; bio: string; tier: Tier; verified: boolean; avatarUrl?: string | null; bannerUrl?: string | null; role?: string; aboutText?: string; charter?: string; }\n\ninterface SocialLink {
+interface PublicCreator { id: number; name: string; username: string; bio: string; tier: Tier; verified: boolean; avatarUrl?: string | null; bannerUrl?: string | null; role?: string; aboutText?: string; charter?: string; }
+
+interface SocialLink {
   id: number;
   platform: string;
   url: string;
@@ -39,10 +41,13 @@ export default function CreatorProfilePage() {
   const user = useStore((s) => s.user);
   const openAuth = useStore((s) => s.openAuth);
   const toast = useStore((s) => s.toast);
-  const publications = useStore((s) => s.publications);\n  const updateProfile = useStore((s) => s.updateProfile);\n  const addProfileLink = useStore((s) => s.addProfileLink);\n  const deleteProfileLink = useStore((s) => s.deleteProfileLink);\n  const addProfileLink = useStore((s) => s.addProfileLink);\n  const deleteProfileLink = useStore((s) => s.deleteProfileLink);
+  const publications = useStore((s) => s.publications);
+  const updateProfile = useStore((s) => s.updateProfile);
+  const addProfileLink = useStore((s) => s.addProfileLink);
+  const deleteProfileLink = useStore((s) => s.deleteProfileLink);
 
   const creator = undefined;
-  const isOwner = !!user && user.username === handle;
+  const isOwner = !!user && !!handle && user.username.toLowerCase() === handle.replace(/^@/, "").toLowerCase() && (!creator || creator.username.toLowerCase() === user.username.toLowerCase());
 
   const [links, setLinks] = useState<SocialLink[]>([]);
   const [adding, setAdding] = useState(false);
@@ -55,9 +60,13 @@ export default function CreatorProfilePage() {
   const [editAvatar, setEditAvatar] = useState(user?.avatarUrl ?? "");
   const [editBanner, setEditBanner] = useState(user?.bannerUrl ?? "");
 
-  useEffect(() => { setLinks(publicLinks); }, [publicLinks]);\n\n  const videos: Video[] = useMemo(() => isOwner ? publications.map((p) => ({ id: p.id, title: p.title, creator: user?.displayName ?? "", creatorRole: "Créateur", verified: user?.verified ?? false, category: "courts", duration: "—", views: p.views, published: new Date(p.createdAt).toISOString(), art: { g: "from-[#0d2233] via-[#0a1424] to-[#0d1117]", motif: "scan", glow: "rgba(0,229,255,0.20)" }, description: "" })) : publicVideos, [isOwner, publications, user, publicVideos]);
+  useEffect(() => { setLinks(publicLinks); }, [publicLinks]);
 
-  if (loadingProfile) { return <div className="mx-auto max-w-[700px] pb-16"><div className="glass rounded-2xl px-6 py-14 text-center"><Film size={26} className="mx-auto animate-pulse text-cyan/60" /><p className="mt-3 text-[14px] font-bold text-frost">Chargement de l’antenne…</p></div></div>; }\n\n  if (profileError && !isOwner) {
+  const videos: Video[] = useMemo(() => isOwner ? publications.map((p) => ({ id: p.id, title: p.title, creator: user?.displayName ?? "", creatorRole: "Créateur", verified: user?.verified ?? false, category: "courts", duration: "—", views: p.views, published: new Date(p.createdAt).toISOString(), art: { g: "from-[#0d2233] via-[#0a1424] to-[#0d1117]", motif: "scan", glow: "rgba(0,229,255,0.20)" }, description: "" })) : publicVideos, [isOwner, publications, user, publicVideos]);
+
+  if (loadingProfile) { return <div className="mx-auto max-w-[700px] pb-16"><div className="glass rounded-2xl px-6 py-14 text-center"><Film size={26} className="mx-auto animate-pulse text-cyan/60" /><p className="mt-3 text-[14px] font-bold text-frost">Chargement de l’antenne…</p></div></div>; }
+
+  if (profileError && !isOwner) {
     return (
       <div className="mx-auto max-w-[700px] pb-16">
         <div className="glass rounded-2xl px-6 py-14 text-center">
@@ -85,9 +94,12 @@ export default function CreatorProfilePage() {
 
   const saveProfile = () => {
     if (!isOwner || !user) return;
-    useStore.getState().updateLocalUser({ bio: editBio.trim(), avatarUrl: editAvatar.trim() || undefined, bannerUrl: editBanner.trim() || undefined });
-    setEditOpen(false);
-    toast("Profil mis à jour", "ok");
+    void updateProfile({ bio: editBio.trim(), avatarUrl: editAvatar.trim() || undefined, bannerUrl: editBanner.trim() || undefined }).then((error) => {
+      if (error) { toast(error, "warn"); return; }
+      setCreator((current) => current ? { ...current, bio: editBio.trim(), avatarUrl: editAvatar.trim() || null, bannerUrl: editBanner.trim() || null } : current);
+      setEditOpen(false);
+      toast("Profil mis à jour", "ok");
+    });
   };
 
   const addLink = () => {
