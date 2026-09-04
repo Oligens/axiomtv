@@ -3,7 +3,7 @@
  * Bannière, bio, charte, liens sociaux (« + Ajouter un lien »), vidéos,
  * abonnement et dons (réservés aux abonnés Pro/Gold).
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -11,7 +11,7 @@ import {
   Mail, MessageSquare, Plus, Rss, Send, Share2, Trash2, Youtube,
 } from "lucide-react";
 import { TIER_LABEL, type Tier, type Video } from "../data/axiom";
-import { useStore } from "../store/useStore";
+import { apiEnabled, useStore } from "../store/useStore";
 import VideoCard from "../components/VideoCard";
 
 const PLATFORMS: { id: string; label: string; icon: React.ReactNode; placeholder: string }[] = [
@@ -25,7 +25,7 @@ const PLATFORMS: { id: string; label: string; icon: React.ReactNode; placeholder
   { id: "mail", label: "Email", icon: <Mail size={13} />, placeholder: "mailto:contact@media.org" },
 ];
 
-interface SocialLink {
+interface PublicCreator { id: number; name: string; username: string; bio: string; tier: Tier; verified: boolean; avatarUrl?: string | null; bannerUrl?: string | null; role?: string; aboutText?: string; charter?: string; }\n\ninterface SocialLink {
   id: number;
   platform: string;
   url: string;
@@ -39,7 +39,7 @@ export default function CreatorProfilePage() {
   const user = useStore((s) => s.user);
   const openAuth = useStore((s) => s.openAuth);
   const toast = useStore((s) => s.toast);
-  const publications = useStore((s) => s.publications);
+  const publications = useStore((s) => s.publications);\n  const updateProfile = useStore((s) => s.updateProfile);
 
   const creator = undefined;
   const isOwner = !!user && user.username === handle;
@@ -55,9 +55,9 @@ export default function CreatorProfilePage() {
   const [editAvatar, setEditAvatar] = useState(user?.avatarUrl ?? "");
   const [editBanner, setEditBanner] = useState(user?.bannerUrl ?? "");
 
-  const videos: Video[] = useMemo(() => isOwner ? publications.map((p) => ({ id: p.id, title: p.title, creator: user?.displayName ?? "", creatorRole: "Créateur", verified: user?.verified ?? false, category: "courts", duration: "—", views: p.views, published: new Date(p.createdAt).toISOString(), art: { g: "from-[#0d2233] via-[#0a1424] to-[#0d1117]", motif: "scan", glow: "rgba(0,229,255,0.20)" }, description: "" })) : [], [isOwner, publications, user]);
+  useEffect(() => { setLinks(publicLinks); }, [publicLinks]);\n\n  const videos: Video[] = useMemo(() => isOwner ? publications.map((p) => ({ id: p.id, title: p.title, creator: user?.displayName ?? "", creatorRole: "Créateur", verified: user?.verified ?? false, category: "courts", duration: "—", views: p.views, published: new Date(p.createdAt).toISOString(), art: { g: "from-[#0d2233] via-[#0a1424] to-[#0d1117]", motif: "scan", glow: "rgba(0,229,255,0.20)" }, description: "" })) : publicVideos, [isOwner, publications, user, publicVideos]);
 
-  if (!creator && !isOwner) {
+  if (loadingProfile) { return <div className="mx-auto max-w-[700px] pb-16"><div className="glass rounded-2xl px-6 py-14 text-center"><Film size={26} className="mx-auto animate-pulse text-cyan/60" /><p className="mt-3 text-[14px] font-bold text-frost">Chargement de l’antenne…</p></div></div>; }\n\n  if (profileError && !isOwner) {
     return (
       <div className="mx-auto max-w-[700px] pb-16">
         <div className="glass rounded-2xl px-6 py-14 text-center">
@@ -79,7 +79,7 @@ export default function CreatorProfilePage() {
   const followers = 0;
   const hue = creator?.hue ?? "#00e5ff";
   const hueTo = creator?.hueTo ?? "#9d4edd";
-  const tier: Tier = creator?.id ? (creator.verified ? "pro" : "free") : (user?.tier ?? "free");
+  const tier: Tier = creator?.tier ?? user?.tier ?? "free";
   const avatarUrl = creator?.id ? undefined : user?.avatarUrl;
   const bannerUrl = creator?.id ? undefined : user?.bannerUrl;
 
@@ -121,7 +121,7 @@ export default function CreatorProfilePage() {
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         className="scanlines relative mt-4 h-52 overflow-hidden rounded-[22px] border border-white/[0.08] md:mt-6 md:h-64"
       >
-        <div className={`absolute inset-0 bg-gradient-to-br`} style={{ background: `linear-gradient(120deg, ${hue}33, transparent 45%), linear-gradient(240deg, ${hueTo}3d, transparent 50%), linear-gradient(160deg, #10151d, #0a0e14)` }} />
+        <div className={`absolute inset-0 bg-gradient-to-br`} style={{ background: bannerUrl ? `linear-gradient(160deg, rgba(10,14,20,.2), rgba(10,14,20,.75)), url(${bannerUrl}) center/cover` : `linear-gradient(120deg, ${hue}33, transparent 45%), linear-gradient(240deg, ${hueTo}3d, transparent 50%), linear-gradient(160deg, #10151d, #0a0e14)` }} />
         <div className="absolute inset-0" style={{ background: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "34px 34px" }} />
         <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 25% 35%, ${hue}40, transparent 55%)` }} />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink to-transparent" />
