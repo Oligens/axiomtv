@@ -244,8 +244,8 @@ export const useStore = create<Store>()(
       addProfileLink: async (link) => {
         if (!get().user || !get().authToken || !apiEnabled()) return "Authentification requise";
         try {
-          await api("/api/profile/links", { method: "POST", body: JSON.stringify(link) });
-          return null;
+          const response = await api<{ id: number }>("/api/profile/links", { method: "POST", body: JSON.stringify(link) });
+          return String(response.id);
         } catch (e) {
           return e instanceof Error ? e.message : "Impossible d'ajouter le lien";
         }
