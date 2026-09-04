@@ -43,10 +43,7 @@ export default function CreatorProfilePage() {
   const creator = undefined;
   const isOwner = !!user && user.username === handle;
 
-  const [links, setLinks] = useState<SocialLink[]>([
-    { id: 1, platform: "website", url: "https://axiom.tv/antenne" },
-    { id: 2, platform: "x", url: "https://x.com/axiomtv" },
-  ]);
+  const [links, setLinks] = useState<SocialLink[]>([]);
   const [adding, setAdding] = useState(false);
   const [newPlatform, setNewPlatform] = useState("website");
   const [newUrl, setNewUrl] = useState("");
