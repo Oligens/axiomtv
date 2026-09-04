@@ -50,6 +50,10 @@ export default function CreatorProfilePage() {
   const [newUrl, setNewUrl] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editBio, setEditBio] = useState(user?.bio ?? "");
+  const [editAvatar, setEditAvatar] = useState(user?.avatarUrl ?? "");
+  const [editBanner, setEditBanner] = useState(user?.bannerUrl ?? "");
 
   const videos: Video[] = useMemo(() => isOwner ? publications.map((p) => ({ id: p.id, title: p.title, creator: user?.displayName ?? "", creatorRole: "Créateur", verified: user?.verified ?? false, category: "courts", duration: "—", views: p.views, published: new Date(p.createdAt).toISOString(), art: { g: "from-[#0d2233] via-[#0a1424] to-[#0d1117]", motif: "scan", glow: "rgba(0,229,255,0.20)" }, description: "" })) : [], [isOwner, publications, user]);
 
@@ -75,7 +79,16 @@ export default function CreatorProfilePage() {
   const followers = 0;
   const hue = creator?.hue ?? "#00e5ff";
   const hueTo = creator?.hueTo ?? "#9d4edd";
-  const tier: Tier = user?.tier ?? "free";
+  const tier: Tier = creator?.id ? (creator.verified ? "pro" : "free") : (user?.tier ?? "free");
+  const avatarUrl = creator?.id ? undefined : user?.avatarUrl;
+  const bannerUrl = creator?.id ? undefined : user?.bannerUrl;
+
+  const saveProfile = () => {
+    if (!isOwner || !user) return;
+    useStore.getState().updateLocalUser({ bio: editBio.trim(), avatarUrl: editAvatar.trim() || undefined, bannerUrl: editBanner.trim() || undefined });
+    setEditOpen(false);
+    toast("Profil mis à jour", "ok");
+  };
 
   const addLink = () => {
     if (!newUrl.trim()) return;
@@ -124,7 +137,7 @@ export default function CreatorProfilePage() {
             className="font-display grid h-28 w-28 shrink-0 place-items-center rounded-2xl border-4 border-ink text-[34px] font-bold text-white shadow-[0_0_34px_rgba(0,0,0,0.6)]"
             style={{ background: `linear-gradient(135deg, ${hue}55, ${hueTo}66)`, textShadow: `0 0 18px ${hue}` }}
           >
-            {name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+            {avatarUrl ? <img src={avatarUrl} alt={name} className="h-full w-full rounded-[10px] object-cover" /> : name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
           </span>
           <div className="min-w-0 flex-1 pb-1">
             <div className="flex flex-wrap items-center gap-2.5">
@@ -139,40 +152,20 @@ export default function CreatorProfilePage() {
             </p>
           </div>
 
-          {/* actions */}
+          {/* actions : propriétaire = édition, visiteur = abonnement/don */}
           <div className="flex items-center gap-2.5 pb-1">
-            <button onClick={subscribe} className={`flex items-center gap-2 rounded-full px-5 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.14em] transition-all ${subscribed ? "border border-mint/50 bg-mint/12 text-mint" : "btn-neon"}`}>
-              {subscribed ? "Abonné ✓" : "S'abonner"}
-            </button>
-            <div className="relative">
-              <button
-                onClick={() => {
-                  if (!user) return openAuth("register");
-                  if (!canGift(user.tier)) {
-                    toast("L'envoi de cadeaux est réservé aux abonnés Axiom Pro & Gold", "warn");
-                    navigate("/pro");
-                    return;
-                  }
-                  setGiftOpen((v) => !v);
-                }}
-                className="gold-btn flex items-center gap-2 rounded-full px-5 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.14em]"
-              >
-                <Gift size={14} /> Faire un don
-              </button>
-              {giftOpen && canGift(user?.tier) && (
-                <div className="glass-deep absolute right-0 top-[calc(100%+8px)] z-30 w-48 overflow-hidden rounded-xl shadow-[0_24px_60px_rgba(0,0,0,0.7)]" style={{ animation: "fadeIn 0.2s ease both" }}>
-                  {[2, 5, 10, 25].map((a) => (
-                    <button key={a} onClick={() => sendGift(a)} className="flex w-full items-center justify-between px-4 py-2.5 text-left text-[12.5px] font-bold text-frost transition-colors hover:bg-white/[0.05]">
-                      <span className="flex items-center gap-2"><Gift size={13} className="text-gold" /> Soutien</span>
-                      <span className="font-mono text-gold">{a.toFixed(2)} $</span>
-                    </button>
-                  ))}
+            {isOwner ? (
+              <button onClick={() => { setEditBio(bio); setEditAvatar(avatarUrl ?? ""); setEditBanner(bannerUrl ?? ""); setEditOpen(true); }} className="btn-neon rounded-full px-5 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.14em]">Modifier le profil</button>
+            ) : (
+              <>
+                <button onClick={subscribe} className={`flex items-center gap-2 rounded-full px-5 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.14em] transition-all ${subscribed ? "border border-mint/50 bg-mint/12 text-mint" : "btn-neon"}`}>{subscribed ? "Abonné ✓" : "S’abonner"}</button>
+                <div className="relative">
+                  <button onClick={() => { if (!user) return openAuth("register"); if (!canGift(user.tier)) { toast("L’envoi de cadeaux est réservé aux abonnés Axiom Pro & Gold", "warn"); navigate("/pro"); return; } setGiftOpen((v) => !v); }} className="gold-btn flex items-center gap-2 rounded-full px-5 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.14em]"><Gift size={14} /> Faire un don</button>
+                  {giftOpen && canGift(user?.tier) && <div className="glass-deep absolute right-0 top-[calc(100%+8px)] z-30 w-48 overflow-hidden rounded-xl">{[2,5,10,25].map((a) => <button key={a} onClick={() => sendGift(a)} className="flex w-full items-center justify-between px-4 py-2.5 text-left text-[12.5px] font-bold text-frost"><span><Gift size={13} className="mr-2 inline text-gold" />Soutien</span><span className="font-mono text-gold">{a.toFixed(2)} $</span></button>)}</div>}
                 </div>
-              )}
-            </div>
-            <button onClick={() => toast("Lien de l'antenne copié — partagez librement", "info")} aria-label="Partager" className="btn-ghost grid h-10 w-10 place-items-center rounded-full text-fog">
-              <Share2 size={16} />
-            </button>
+              </>
+            )}
+            <button onClick={() => toast("Lien de l’antenne copié — partagez librement", "info")} aria-label="Partager" className="btn-ghost grid h-10 w-10 place-items-center rounded-full text-fog"><Share2 size={16} /></button>
           </div>
         </div>
 
@@ -279,6 +272,20 @@ export default function CreatorProfilePage() {
           </div>
         )}
       </section>
+
+      {isOwner && editOpen && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="edit-profile-title">
+          <div className="glass-deep w-full max-w-xl rounded-2xl border border-white/10 p-6 shadow-2xl">
+            <div className="flex items-center justify-between gap-4"><div><p className="eyebrow text-cyan">Mon antenne</p><h2 id="edit-profile-title" className="mt-1 font-display text-xl font-bold text-white">Modifier le profil</h2></div><button onClick={() => setEditOpen(false)} className="btn-ghost rounded-full px-3 py-2 text-fog">Fermer</button></div>
+            <div className="mt-6 space-y-4">
+              <label className="block"><span className="eyebrow text-fog">Photo de profil — URL</span><input value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} placeholder="https://..." className="field mt-2 w-full rounded-xl px-4 py-3 text-[12px] text-frost" /></label>
+              <label className="block"><span className="eyebrow text-fog">Bannière — URL</span><input value={editBanner} onChange={(e) => setEditBanner(e.target.value)} placeholder="https://..." className="field mt-2 w-full rounded-xl px-4 py-3 text-[12px] text-frost" /></label>
+              <label className="block"><span className="eyebrow text-fog">Biographie</span><textarea value={editBio} onChange={(e) => setEditBio(e.target.value)} rows={5} placeholder="Cette antenne n’a pas encore rédigé sa biographie." className="field mt-2 w-full resize-none rounded-xl px-4 py-3 text-[12px] leading-relaxed text-frost" /></label>
+            </div>
+            <div className="mt-6 flex justify-end gap-2"><button onClick={() => setEditOpen(false)} className="btn-ghost rounded-full px-5 py-2.5 text-[11px] font-bold uppercase text-fog">Annuler</button><button onClick={saveProfile} className="btn-neon rounded-full px-5 py-2.5 text-[11px] font-bold uppercase">Enregistrer</button></div>
+          </div>
+        </div>
+      )}
 
       <span className="hidden"><Eye size={10} /><Crown size={10} /><LinkIcon size={10} /></span>
     </div>
