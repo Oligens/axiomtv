@@ -95,6 +95,7 @@ interface Store {
   boot: () => Promise<void>;
   setTier: (t: Tier) => void;
   updateLocalUser: (p: Partial<User>) => void;
+  updateProfile: (p: Partial<Pick<User, "displayName" | "bio" | "avatarUrl" | "bannerUrl">>) => Promise<string | null>;
 
   /* ---- notifications ---- */
   notifications: AppNotification[];
@@ -140,12 +141,12 @@ export const useStore = create<Store>()(
       login: async (email, password) => {
         if (apiEnabled()) {
           try {
-            const r = await api<{ token: string; user: { name: string; username: string; email: string; bio?: string; tier: Tier; verified?: boolean } }>(
+            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; tier: Tier; verified?: boolean } }>(
               "/api/auth/login",
               { method: "POST", body: JSON.stringify({ email, password }) }
             );
             set({
-              user: { id: 0, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" },
+              user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" },
               authToken: r.token,
             });
             void get().loadNotifications();
@@ -162,12 +163,12 @@ export const useStore = create<Store>()(
       register: async (name, email, password) => {
         if (apiEnabled()) {
           try {
-            const r = await api<{ token: string; user: { name: string; username: string; email: string; bio?: string; tier: Tier; verified?: boolean }; welcomeEmail?: boolean }>(
+            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; tier: Tier; verified?: boolean }; welcomeEmail?: boolean }>(
               "/api/auth/register",
               { method: "POST", body: JSON.stringify({ name, email, password }) }
             );
             set({
-              user: { id: 0, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" },
+              user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" },
               authToken: r.token,
             });
             void get().loadNotifications();
@@ -187,7 +188,7 @@ export const useStore = create<Store>()(
         if (apiEnabled() && get().authToken) {
           try {
             const r = await api<{ user: { name: string; username: string; email: string; bio?: string; tier: Tier; verified?: boolean } }>("/api/auth/me");
-            set({ user: { id: 0, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" } });
+            set({ user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" } });
           } catch {
             set({ user: null, authToken: null });
           }
@@ -197,6 +198,46 @@ export const useStore = create<Store>()(
 
       setTier: (t) => set((s) => ({ user: s.user ? { ...s.user, tier: t } : s.user })),
       updateLocalUser: (p) => set((s) => ({ user: s.user ? { ...s.user, ...p } : s.user })),
+      updateProfile: async (p) => {
+        if (!get().user) return "Authentification requise";
+        if (apiEnabled() && get().authToken) {
+          try {
+            const r = await api<{ user: { id: number; username: string; name: string; email: string; bio?: string; tier: Tier; verified?: boolean; avatarUrl?: string | null; bannerUrl?: string | null } }>(
+              "/api/profile",
+              {
+                method: "PATCH",
+                body: JSON.stringify({
+                  name: p.displayName,
+                  bio: p.bio,
+                  avatarUrl: p.avatarUrl ?? null,
+                  bannerUrl: p.bannerUrl ?? null,
+                }),
+              }
+            );
+            set((s) => ({
+              user: s.user
+                ? {
+                    ...s.user,
+                    id: r.user.id,
+                    username: r.user.username,
+                    displayName: r.user.name,
+                    email: r.user.email,
+                    bio: r.user.bio ?? "",
+                    tier: r.user.tier ?? s.user.tier,
+                    verified: !!r.user.verified,
+                    avatarUrl: r.user.avatarUrl ?? undefined,
+                    bannerUrl: r.user.bannerUrl ?? undefined,
+                  }
+                : s.user,
+            }));
+            return null;
+          } catch (e) {
+            return e instanceof Error ? e.message : "Impossible de mettre à jour le profil";
+          }
+        }
+        set((s) => ({ user: s.user ? { ...s.user, ...p } : s.user }));
+        return null;
+      },
 
       notifications: [],
       loadNotifications: async () => {
