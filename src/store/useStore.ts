@@ -17,6 +17,8 @@ export interface User {
   displayName: string;
   email: string;
   bio: string;
+  avatarUrl?: string;
+  bannerUrl?: string;
   verified: boolean;
   tier: Tier;
 }
