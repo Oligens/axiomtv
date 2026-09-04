@@ -76,7 +76,7 @@ export default function CreatorProfilePage() {
   const role = creator?.role ?? "Citoyen journaliste";
   const bio = creator?.bio ?? user?.bio ?? "";
   const verified = creator?.verified ?? false;
-  const followers = 0;
+  const profileFollowers = followers;
   const hue = creator?.hue ?? "#00e5ff";
   const hueTo = creator?.hueTo ?? "#9d4edd";
   const tier: Tier = creator?.tier ?? user?.tier ?? "free";
@@ -148,7 +148,7 @@ export default function CreatorProfilePage() {
               </span>
             </div>
             <p className="mt-1 text-[12.5px] font-semibold text-fog">
-              @{handle} · {role} · <span className="text-cyan">{followers} abonnés</span> · {videos.length} publications
+              @{handle} · {role} · <span className="text-cyan">{profileFollowers} abonnés</span> · {videos.length} publications
             </p>
           </div>
 
