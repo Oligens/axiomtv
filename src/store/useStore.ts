@@ -96,6 +96,8 @@ interface Store {
   setTier: (t: Tier) => void;
   updateLocalUser: (p: Partial<User>) => void;
   updateProfile: (p: Partial<Pick<User, "displayName" | "bio" | "avatarUrl" | "bannerUrl">>) => Promise<string | null>;
+  addProfileLink: (link: { platform: string; label: string; url: string }) => Promise<string | null>;
+  deleteProfileLink: (id: number) => Promise<string | null>;
 
   /* ---- notifications ---- */
   notifications: AppNotification[];
@@ -237,6 +239,25 @@ export const useStore = create<Store>()(
         }
         set((s) => ({ user: s.user ? { ...s.user, ...p } : s.user }));
         return null;
+      },
+
+      addProfileLink: async (link) => {
+        if (!get().user || !get().authToken || !apiEnabled()) return "Authentification requise";
+        try {
+          await api("/api/profile/links", { method: "POST", body: JSON.stringify(link) });
+          return null;
+        } catch (e) {
+          return e instanceof Error ? e.message : "Impossible d'ajouter le lien";
+        }
+      },
+      deleteProfileLink: async (id) => {
+        if (!get().user || !get().authToken || !apiEnabled()) return "Authentification requise";
+        try {
+          await api(`/api/profile/links/${id}`, { method: "DELETE" });
+          return null;
+        } catch (e) {
+          return e instanceof Error ? e.message : "Impossible de supprimer le lien";
+        }
       },
 
       notifications: [],
