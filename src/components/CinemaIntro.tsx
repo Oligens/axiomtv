@@ -122,7 +122,7 @@ function WaterRings({ intensity }: { intensity: number }) {
   );
 }
 
-function AgweLogo({ progress, glow }: { progress: number; glow: number }) {
+export function AgweLogo({ progress, glow }: { progress: number; glow: number }) {
   return (
     <div
       className="relative z-10"
@@ -238,6 +238,91 @@ function useOceanAudio() {
   }, [play]);
 
   return { enabled, blocked, play, toggle };
+}
+
+export function IntroMetadataForm({
+  meta,
+  onChange,
+  onPreview,
+}: {
+  meta: IntroMetadata;
+  onChange: (meta: IntroMetadata) => void;
+  onPreview?: () => void;
+}) {
+  const update = (patch: Partial<IntroMetadata>) => onChange({ ...meta, ...patch });
+  const updateDirector = (index: number, patch: Partial<IntroMetadata["directors"][number]>) => {
+    const directors = meta.directors.map((director, i) => i === index ? { ...director, ...patch } : director);
+    update({ directors });
+  };
+  const addDirector = () => update({ directors: [...meta.directors, { name: "", role: "Réalisation" }] });
+  const removeDirector = (index: number) => update({ directors: meta.directors.filter((_, i) => i !== index) });
+
+  return (
+    <div className="space-y-4">
+      <label className="block">
+        <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-fog">Titre du film</span>
+        <input
+          value={meta.title}
+          onChange={(e) => update({ title: e.target.value })}
+          className="h-11 w-full rounded-xl border border-white/10 bg-black/20 px-4 text-sm font-semibold text-frost outline-none transition focus:border-cyan/50"
+          placeholder="Titre du film"
+        />
+      </label>
+
+      <label className="block">
+        <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-fog">Distribution / casting</span>
+        <textarea
+          value={meta.cast.join("\\n")}
+          onChange={(e) => update({ cast: e.target.value.split(/\\r?\\n|,/).map((name) => name.trim()).filter(Boolean) })}
+          rows={4}
+          className="w-full resize-y rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm font-semibold text-frost outline-none transition focus:border-cyan/50"
+          placeholder="Un nom par ligne"
+        />
+      </label>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-fog">Équipe technique</span>
+          <button type="button" onClick={addDirector} className="rounded-full border border-cyan/30 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-cyan transition hover:bg-cyan/10">Ajouter</button>
+        </div>
+        <div className="space-y-2">
+          {meta.directors.map((director, index) => (
+            <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+              <input
+                value={director.name}
+                onChange={(e) => updateDirector(index, { name: e.target.value })}
+                className="h-10 rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-frost outline-none focus:border-cyan/50"
+                placeholder="Nom"
+              />
+              <input
+                value={director.role}
+                onChange={(e) => updateDirector(index, { role: e.target.value })}
+                className="h-10 rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-frost outline-none focus:border-cyan/50"
+                placeholder="Rôle"
+              />
+              <button type="button" onClick={() => removeDirector(index)} className="rounded-xl border border-white/10 px-3 text-[11px] text-fog transition hover:border-coral/40 hover:text-coral" aria-label="Supprimer ce membre de l'équipe">×</button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <label className="block max-w-[180px]">
+        <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-[0.14em] text-fog">Année</span>
+        <input
+          type="number"
+          min={1900}
+          max={3000}
+          value={meta.year}
+          onChange={(e) => update({ year: Number(e.target.value) || new Date().getFullYear() })}
+          className="h-10 w-full rounded-xl border border-white/10 bg-black/20 px-3 text-sm text-frost outline-none focus:border-cyan/50"
+        />
+      </label>
+
+      {onPreview && (
+        <button type="button" onClick={onPreview} className="btn-neon rounded-full px-5 py-2.5 font-display text-[11px] font-bold uppercase tracking-[0.14em]">Prévisualiser l'intro</button>
+      )}
+    </div>
+  );
 }
 
 export default function CinemaIntro({
