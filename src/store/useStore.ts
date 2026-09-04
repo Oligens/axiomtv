@@ -175,7 +175,7 @@ export const useStore = create<Store>()(
           }
         }
         const u: User = { username: slug(email), displayName: name.trim(), email, bio: "", verified: false, tier: "free" };
-        set({ user: u, authToken: null, notifications: seedNotifications(u.displayName) });
+        set({ user: u, authToken: null, notifications: [] });
         return null;
       },
 
