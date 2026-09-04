@@ -39,7 +39,7 @@ export default function CreatorProfilePage() {
   const user = useStore((s) => s.user);
   const openAuth = useStore((s) => s.openAuth);
   const toast = useStore((s) => s.toast);
-  const publications = useStore((s) => s.publications);\n  const updateProfile = useStore((s) => s.updateProfile);
+  const publications = useStore((s) => s.publications);\n  const updateProfile = useStore((s) => s.updateProfile);\n  const addProfileLink = useStore((s) => s.addProfileLink);\n  const deleteProfileLink = useStore((s) => s.deleteProfileLink);
 
   const creator = undefined;
   const isOwner = !!user && user.username === handle;
