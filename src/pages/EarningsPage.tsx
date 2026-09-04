@@ -6,7 +6,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import { ArrowDownToLine, CreditCard, Landmark, Plus, Smartphone, Star, Trash2, TrendingUp, Wallet } from "lucide-react";
-import { DEMO_TRANSACTIONS, GATEWAYS, REVENUE_SERIES, type Transaction } from "../data/axiom";
+import { GATEWAYS, type Transaction } from "../data/axiom";
 import { useStore } from "../store/useStore";
 
 const fmt$ = (n: number) => `${n.toLocaleString("fr-CA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`;
@@ -22,8 +22,8 @@ export default function EarningsPage() {
   const removePaymentMethod = useStore((s) => s.removePaymentMethod);
   const setDefaultMethod = useStore((s) => s.setDefaultMethod);
 
-  const [txs, setTxs] = useState<Transaction[]>(DEMO_TRANSACTIONS);
-  const [withdrawAmount, setWithdrawAmount] = useState("500");
+  const [txs, setTxs] = useState<Transaction[]>([]);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawMethod, setWithdrawMethod] = useState<number | null>(null);
   const [adding, setAdding] = useState(false);
   const [newGateway, setNewGateway] = useState("stripe");
@@ -32,7 +32,7 @@ export default function EarningsPage() {
   const total = txs.filter((t) => t.kind !== "withdrawal").reduce((n, t) => n + t.amount, 0);
   const withdrawn = Math.abs(txs.filter((t) => t.kind === "withdrawal").reduce((n, t) => n + t.amount, 0));
   const available = total - withdrawn;
-  const subscribers = 412;
+  const subscribers = 0;
 
   const doWithdraw = () => {
     const amt = parseFloat(withdrawAmount);
@@ -108,7 +108,7 @@ export default function EarningsPage() {
         <p className="eyebrow text-cyan">Évolution des revenus (6 mois)</p>
         <div className="mt-4 h-56">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={REVENUE_SERIES}>
+            <AreaChart data={[]}>
               <defs>
                 <linearGradient id="rev" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#00e5ff" stopOpacity={0.4} />
