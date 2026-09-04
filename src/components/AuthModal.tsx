@@ -10,6 +10,24 @@ import { useStore, apiEnabled } from "../store/useStore";
 import { Logomark } from "./brand";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+interface AuthFieldProps {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}
+
+function AuthField({ label, error, children }: AuthFieldProps) {
+  return (
+    <label className="block">
+      <span className="font-display mb-1.5 flex items-baseline justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-fog">
+        {label}
+        {error && <span className="normal-case tracking-normal text-coral">{error}</span>}
+      </span>
+      {children}
+    </label>
+  );
+}
+
 
 export default function AuthModal() {
   const authModal = useStore((s) => s.authModal);
@@ -77,15 +95,6 @@ export default function AuthModal() {
     }
   };
 
-  const Field = ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
-    <label className="block">
-      <span className="font-display mb-1.5 flex items-baseline justify-between text-[10px] font-bold uppercase tracking-[0.2em] text-fog">
-        {label}
-        {error && <span className="normal-case tracking-normal text-coral">{error}</span>}
-      </span>
-      {children}
-    </label>
-  );
 
   return (
     <AnimatePresence>
@@ -176,18 +185,18 @@ export default function AuthModal() {
                     <AnimatePresence initial={false}>
                       {mode === "register" && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.25 }} className="overflow-hidden">
-                          <Field label="Nom" error={err.name}>
+                          <AuthField label="Nom" error={err.name}>
                             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nora Kaci" autoComplete="name" className="field h-11 w-full rounded-xl px-4 text-[13.5px] font-semibold text-frost" />
-                          </Field>
+                          </AuthField>
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    <Field label="Email" error={err.email}>
+                    <AuthField label="Email" error={err.email}>
                       <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="vous@media-independant.org" autoComplete="email" className="field h-11 w-full rounded-xl px-4 text-[13.5px] font-semibold text-frost" />
-                    </Field>
+                    </AuthField>
 
-                    <Field label="Mot de passe" error={err.password}>
+                    <AuthField label="Mot de passe" error={err.password}>
                       <div className="relative">
                         <input
                           value={password}
@@ -201,7 +210,7 @@ export default function AuthModal() {
                           {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
-                    </Field>
+                    </AuthField>
 
                     {error && (
                       <motion.p initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border border-coral/40 bg-coral/10 px-3 py-2 text-[11.5px] font-bold text-coral">
