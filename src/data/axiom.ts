@@ -38,96 +38,8 @@ export interface ThumbArt {
   glow: string; // teinte du halo
 }
 
-export interface Video {
-  id: string;
-  title: string;
-  creator: string;
-  creatorRole: string;
-  verified: boolean;
-  category: Exclude<CategoryId, "tous">;
-  duration: string;
-  views: number;
-  published: string;
-  live?: boolean;
-  viewers?: number;
-  art: ThumbArt;
-  description: string;
-}
-
-export const VIDEOS: Video[] = [
-  {
-    id: "v1", title: "Nuit de l'assemblée — la rue en direct", creator: "Aïcha Bellard", creatorRole: "Grand reporter terrain",
-    verified: true, category: "directs", duration: "EN DIRECT", views: 0, published: "débuté il y a 42 min", live: true, viewers: 2841,
-    art: { g: "from-[#1c0f2e] via-[#0d1117] to-[#061a24]", motif: "beams", glow: "rgba(255,93,115,0.35)" },
-    description: "Couverture immersive de la soirée, sans commentaire éditorial : le direct brut filmé au plus près de la rue.",
-  },
-  {
-    id: "v2", title: "Plateau ouvert — Radio Axiom 24/7", creator: "Collectif Axiom", creatorRole: "Radio communautaire",
-    verified: true, category: "directs", duration: "EN CONTINU", views: 0, published: "flux permanent", live: true, viewers: 963,
-    art: { g: "from-[#12102a] via-[#0a0e14] to-[#001a22]", motif: "waves", glow: "rgba(0,229,255,0.3)" },
-    description: "Le plateau ouvert de la communauté : prises de parole libres et vérifications en temps réel, 24h/24.",
-  },
-  {
-    id: "v3", title: "L'affaire des eaux troubles — 6 mois d'enquête", creator: "Marc Delain", creatorRole: "Journaliste d'investigation",
-    verified: true, category: "reportages", duration: "26:14", views: 24180, published: "il y a 3 jours",
-    art: { g: "from-[#0f2e33] via-[#0a1420] to-[#0d1117]", motif: "grid", glow: "rgba(0,229,255,0.28)" },
-    description: "Quarante documents inédits, douze témoignages, une cartographie complète des rejets industriels du bassin.",
-  },
-  {
-    id: "v4", title: "Nuit debout, chroniques de la place", creator: "Aïcha Bellard", creatorRole: "Grand reporter terrain",
-    verified: true, category: "reportages", duration: "14:32", views: 12430, published: "il y a 2 jours",
-    art: { g: "from-[#241230] via-[#120d1f] to-[#0a0e14]", motif: "scan", glow: "rgba(157,78,221,0.32)" },
-    description: "Trois nuits sur la place, à hauteur d'yeux. Un récit sans voix off, monté avec les habitants.",
-  },
-  {
-    id: "v5", title: "L'envers du barrage", creator: "Sofia Kramer", creatorRole: "Documentariste citoyenne",
-    verified: false, category: "reportages", duration: "21:07", views: 8812, published: "il y a 5 jours",
-    art: { g: "from-[#0d2433] via-[#0a1420] to-[#101018]", motif: "beams", glow: "rgba(52,211,153,0.28)" },
-    description: "Dix jours de marche le long de la retenue d'eau pour recueillir la parole des riverains et des hydrologues.",
-  },
-  {
-    id: "v6", title: "La ville qui s'étend, vue du ciel", creator: "Théo Vasseur", creatorRole: "Vidéaste & pilote de drone",
-    verified: false, category: "reportages", duration: "08:45", views: 5240, published: "il y a 1 semaine",
-    art: { g: "from-[#1a1030] via-[#0d1117] to-[#0a1a26]", motif: "grid", glow: "rgba(0,229,255,0.25)" },
-    description: "Cartographie aérienne de l'étalement urbain, réalisée avec un drone grand public et des données ouvertes.",
-  },
-  {
-    id: "v7", title: "Conférence — Collectif Vérité & Médias", creator: "Nadia Okonkwo", creatorRole: "Porte-parole du collectif",
-    verified: true, category: "conferences", duration: "58:20", views: 18350, published: "hier",
-    art: { g: "from-[#2a1430] via-[#140d20] to-[#0a0e14]", motif: "beams", glow: "rgba(245,197,66,0.26)" },
-    description: "Rapport annuel sur la concentration des médias, en séance publique et intégrale, questions comprises.",
-  },
-  {
-    id: "v8", title: "Q&R — L'observatoire des médias indépendants", creator: "Marc Delain", creatorRole: "Journaliste d'investigation",
-    verified: true, category: "conferences", duration: "52:40", views: 6120, published: "il y a 4 jours",
-    art: { g: "from-[#101a2e] via-[#0a1020] to-[#0d1117]", motif: "dots", glow: "rgba(0,229,255,0.24)" },
-    description: "Une heure de questions sur le financement de la presse libre et la protection des sources.",
-  },
-  {
-    id: "v9", title: "Fréquence Libre #42 — Informer coûte que coûte", creator: "Nadia Okonkwo", creatorRole: "Animatrice Fréquence Libre",
-    verified: true, category: "podcasts", duration: "48:12", views: 3977, published: "il y a 3 jours",
-    art: { g: "from-[#1e0f28] via-[#120a1e] to-[#0a0e14]", motif: "waves", glow: "rgba(157,78,221,0.3)" },
-    description: "Trois journalistes menacés témoignent du prix réel de l'information indépendante.",
-  },
-  {
-    id: "v10", title: "Mémoires de presse — les archives interdites", creator: "Théo Vasseur", creatorRole: "Vidéaste & pilote de drone",
-    verified: false, category: "podcasts", duration: "35:58", views: 2310, published: "il y a 6 jours",
-    art: { g: "from-[#241a10] via-[#14100a] to-[#0a0e14]", motif: "dots", glow: "rgba(245,197,66,0.24)" },
-    description: "Plongée sonore dans les archives d'un journal censuré en 1962, sauvées par un archiviste bénévole.",
-  },
-  {
-    id: "v11", title: "Signal Faible", creator: "Lina Morvan", creatorRole: "Réalisatrice indépendante",
-    verified: false, category: "courts", duration: "12:03", views: 15830, published: "il y a 2 semaines",
-    art: { g: "from-[#0d2233] via-[#0a1424] to-[#120d24]", motif: "scan", glow: "rgba(0,229,255,0.32)" },
-    description: "Dans une ville où les réseaux tombent un à un, une opératrice radio capte le dernier signal. Sélection Courts Libres 2026.",
-  },
-  {
-    id: "v12", title: "Dernière Édition", creator: "Lina Morvan", creatorRole: "Réalisatrice indépendante",
-    verified: false, category: "courts", duration: "07:41", views: 9406, published: "il y a 1 mois",
-    art: { g: "from-[#1a1428] via-[#0d0d18] to-[#0a0e14]", motif: "grid", glow: "rgba(157,78,221,0.26)" },
-    description: "La dernière nuit d'une imprimerie de presse. Sept minutes, un seul plan, aucune musique.",
-  },
-];
+/** Contenus dynamiques : aucune donnée fictive n'est fournie au premier chargement. */
+export const VIDEOS: Video[] = [];
 
 export interface Creator {
   id: string;
@@ -141,32 +53,11 @@ export interface Creator {
   bio: string;
 }
 
-export const CREATORS: Creator[] = [
-  { id: "c1", name: "Aïcha Bellard", handle: "aicha-bellard", role: "Grand reporter terrain", followers: 48200, hue: "#00e5ff", hueTo: "#9d4edd", verified: true, bio: "La rue comme studio, le direct comme preuve. 12 ans de terrain, zéro rédacteur en chef." },
-  { id: "c2", name: "Marc Delain", handle: "marc-delain", role: "Journaliste d'investigation", followers: 36900, hue: "#9d4edd", hueTo: "#ff5d73", verified: true, bio: "Documents, sources, patience. Chaque enquête est financée par celles et ceux qui la regardent." },
-  { id: "c3", name: "Nadia Okonkwo", handle: "nadia-okonkwo", role: "Animatrice — Fréquence Libre", followers: 22400, hue: "#f5c542", hueTo: "#ff5d73", verified: true, bio: "Un micro ouvert, des voix qu'on n'entend pas ailleurs. Fréquence Libre, chaque jeudi." },
-  { id: "c4", name: "Sofia Kramer", handle: "sofia-kramer", role: "Documentariste citoyenne", followers: 12100, hue: "#34d399", hueTo: "#00e5ff", verified: false, bio: "Je marche, j'écoute, je filme. Les grands récits commencent toujours par un pas de côté." },
-  { id: "c5", name: "Théo Vasseur", handle: "theo-vasseur", role: "Vidéaste & pilote de drone", followers: 8700, hue: "#00e5ff", hueTo: "#34d399", verified: false, bio: "Le territoire vu d'en haut, raconté par ceux d'en bas. Données ouvertes, ciel ouvert." },
-];
+/** Profils créateurs provenant exclusivement de l'API / du store utilisateur. */
+export const CREATORS: Creator[] = [];
+export const TICKER: string[] = [];
+export const STATS: { value: string; label: string; sub: string }[] = [];
 
-export const TICKER: string[] = [
-  "DIRECT — « Nuit de l'assemblée » : 2 841 spectateurs connectés",
-  "NOUVEAU — Studio AgwèStream : scénario global, clonage vocal et timeline IA",
-  "ENQUÊTE — « L'affaire des eaux troubles » dépasse les 24 000 vues",
-  "PRO — Sondages Agwé Vision : votez en direct et orientez les émissions",
-  "DIRECT — Plateau ouvert Radio Axiom : 963 auditeurs en ce moment",
-  "CHARTE — 1 200 signataires pour la charte de la presse indépendante",
-  "STUDIO — 312 contenus publiés par la communauté cette semaine",
-];
-
-export const STATS: { value: string; label: string; sub: string }[] = [
-  { value: "12 480", label: "Journalistes & créateurs", sub: "+318 ce mois-ci" },
-  { value: "3 842", label: "Contenus ce mois-ci", sub: "100 % communautaires" },
-  { value: "214", label: "Directs en cours", sub: "41 fuseaux horaires" },
-  { value: "1,2 M", label: "Spectateurs", sub: "zéro algorithme publicitaire" },
-];
-
-/* ================= Antennes continues (Zap virtuel) ================= */
 export interface ZapChannel {
   id: string;
   num: string;
@@ -177,14 +68,7 @@ export interface ZapChannel {
   live: boolean;
   art: ThumbArt;
 }
-
-export const ZAP_CHANNELS: ZapChannel[] = [
-  { id: "ch1", num: "01", name: "Axiom 24/7", tagline: "L'antenne généraliste de la communauté", nowPlaying: "Plateau ouvert — parole libre", viewers: 963, live: true, art: { g: "from-[#0d2b3f] via-[#0a0e14] to-[#0d1117]", motif: "waves", glow: "rgba(0,229,255,0.3)" } },
-  { id: "ch2", num: "02", name: "100% Documentaires", tagline: "Enquêtes & terrain en format long", nowPlaying: "L'affaire des eaux troubles", viewers: 1284, live: true, art: { g: "from-[#0f3342] via-[#0a1018] to-[#0d1117]", motif: "grid", glow: "rgba(52,211,153,0.28)" } },
-  { id: "ch3", num: "03", name: "Conférences de Presse", tagline: "Les prises de parole publiques, intégrales", nowPlaying: "Vérité & Médias — rapport annuel", viewers: 642, live: true, art: { g: "from-[#251243] via-[#120d20] to-[#0d1117]", motif: "beams", glow: "rgba(245,197,66,0.26)" } },
-  { id: "ch4", num: "04", name: "Podcasts Citoyens", tagline: "Talk-shows & débats en continu", nowPlaying: "Fréquence Libre #42", viewers: 481, live: true, art: { g: "from-[#2c1233] via-[#160d20] to-[#0d1117]", motif: "waves", glow: "rgba(157,78,221,0.3)" } },
-  { id: "ch5", num: "05", name: "Courts & Création", tagline: "Cinéma indépendant non-stop", nowPlaying: "Signal Faible — Lina Morvan", viewers: 356, live: false, art: { g: "from-[#111d3e] via-[#0a1224] to-[#0d1117]", motif: "scan", glow: "rgba(0,229,255,0.28)" } },
-];
+export const ZAP_CHANNELS: ZapChannel[] = [];
 
 /* ================= Tarification ================= */
 export const ANNUAL_RATE = 0.82; // -18 %
@@ -291,7 +175,7 @@ export const REVENUE_SERIES = [
   { m: "Déc", v: 2232 }, { m: "Jan", v: 3153 }, { m: "Fév", v: 1842 },
 ];
 
-/* ================= Notifications (seed démo) ================= */
+/* ================= Notifications ================= */
 export interface AppNotification {
   id: string;
   type: "welcome" | "live" | "earning" | "info";
@@ -301,14 +185,7 @@ export interface AppNotification {
   createdAt: string;
 }
 
-export const seedNotifications = (name: string): AppNotification[] => {
-  const now = Date.now();
-  return [
-    { id: `n-${now}-1`, type: "welcome", title: "Bienvenue sur AxiomTV", body: `Votre antenne citoyenne est prête, ${name}. Publiez votre premier contenu.`, read: false, createdAt: new Date(now).toISOString() },
-    { id: `n-${now}-2`, type: "live", title: "Un nouveau direct est disponible", body: "« Nuit de l'assemblée » vient de passer en direct — rejoignez la rue.", read: false, createdAt: new Date(now - 60000).toISOString() },
-    { id: `n-${now}-3`, type: "earning", title: "Nouveau don reçu", body: "Un spectateur vous a envoyé 5,00 $ de soutien pendant votre dernier direct.", read: true, createdAt: new Date(now - 3600000).toISOString() },
-  ];
-};
+export const EMPTY_NOTIFICATIONS: AppNotification[] = [];
 
 export const formatViews = (n: number) =>
   n >= 1000 ? `${(n / 1000).toFixed(1).replace(".", ",")} k` : String(n);
