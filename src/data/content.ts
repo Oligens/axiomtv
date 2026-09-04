@@ -139,17 +139,7 @@ export const VOICE_ENGINES = [
 ];
 
 /* ================= Template de scénario ================= */
-export const SCENARIO_TEMPLATE = `[SCÈNE 1 — INT. DÔME DE CONTRÔLE — NUIT]
-(K-9 fixe l'écran principal, mâchoire serrée. Mira ajuste le routeur.)
-K-9 (frustré, voix basse) : « Le signal du dôme a coupé il y a quatre minutes. »
-Mira (calme) : « On a encore une fenêtre. Respire. »
-K-9 (déterminé) : « On transmet avant le prochain passage du convoi. »
-La porte coulisse. Cleef entre, trempé de pluie, essoufflé.
-Cleef (suspendu) : « Ils savent qu'on émet. Il faut bouger. »
-Mira (colérique) : « Tu étais où, bon sang ?! »
-[SCÈNE 2 — EXT. PASSERELLE — NUIT, PLUIE]
-Cleef (aimable) : « J'ai balisé une sortie. Suivez-moi. »
-K-9 débranche l'émetteur et le glisse dans son sac.`;
+export const SCENARIO_TEMPLATE = "";
 
 /** Métadonnées dérivées (titre du film = première scène ou champ dédié) */
 export function deriveTitle(scenario: string): string {
@@ -158,5 +148,5 @@ export function deriveTitle(scenario: string): string {
     const m = firstDialogue.match(/[:：]\s*[«"]?(.{4,40}?)[»"]?\s*$/);
     if (m) return m[1];
   }
-  return "Transmission";
+  return "";
 }
