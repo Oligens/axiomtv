@@ -38,6 +38,22 @@ export interface ThumbArt {
   glow: string; // teinte du halo
 }
 
+export interface Video {
+  id: string;
+  title: string;
+  creator: string;
+  creatorRole: string;
+  verified: boolean;
+  category: Exclude<CategoryId, "tous">;
+  duration: string;
+  views: number;
+  published: string;
+  live?: boolean;
+  viewers?: number;
+  art: ThumbArt;
+  description: string;
+}
+
 /** Contenus dynamiques : aucune donnée fictive n'est fournie au premier chargement. */
 export const VIDEOS: Video[] = [];
 
