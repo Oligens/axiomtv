@@ -25,7 +25,7 @@ const PLATFORMS: { id: string; label: string; icon: React.ReactNode; placeholder
   { id: "mail", label: "Email", icon: <Mail size={13} />, placeholder: "mailto:contact@media.org" },
 ];
 
-interface PublicCreator { id: number; name: string; username: string; bio: string; tier: Tier; verified: boolean; avatarUrl?: string | null; bannerUrl?: string | null; role?: string; aboutText?: string; charter?: string; }
+interface PublicCreator { id: number; name: string; username: string; bio: string; tier: Tier; verified: boolean; avatarUrl?: string | null; bannerUrl?: string | null; role?: string; hue?: string; hueTo?: string; aboutText?: string; charter?: string; }
 
 interface SocialLink {
   id: number;
@@ -265,8 +265,12 @@ export default function CreatorProfilePage() {
                     tabIndex={0}
                     onClick={(e) => {
                       e.preventDefault();
-                      setLinks((ls) => ls.filter((x) => x.id !== l.id));
-                      toast("Lien retiré", "warn");
+                      if (!isOwner) return;
+                      void deleteProfileLink(l.id).then((error) => {
+                        if (error) { toast(error, "warn"); return; }
+                        setLinks((ls) => ls.filter((x) => x.id !== l.id));
+                        toast("Lien retiré", "warn");
+                      });
                     }}
                     onKeyDown={(e) => e.key === "Enter" && setLinks((ls) => ls.filter((x) => x.id !== l.id))}
                     className="ml-1 text-fog/50 hover:text-coral"
