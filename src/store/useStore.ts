@@ -7,7 +7,7 @@
  */
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { seedNotifications, type AppNotification, type Tier } from "../data/axiom";
+import { EMPTY_NOTIFICATIONS, type AppNotification, type Tier } from "../data/axiom";
 import type { IntroMetadata } from "../data/content";
 import { DEFAULT_INTRO } from "../data/content";
 
@@ -153,7 +153,7 @@ export const useStore = create<Store>()(
           }
         }
         const u: User = { username: slug(email), displayName: pretty(slug(email)), email, bio: "", verified: false, tier: get().user?.tier ?? "free" };
-        set({ user: u, authToken: null, notifications: seedNotifications(u.displayName) });
+        set({ user: u, authToken: null, notifications: [] });
         return null;
       },
 
@@ -205,7 +205,7 @@ export const useStore = create<Store>()(
             return;
           } catch { /* repli local */ }
         }
-        if (get().user && get().notifications.length === 0) set({ notifications: seedNotifications(get().user!.displayName) });
+        if (get().user && get().notifications.length === 0) set({ notifications: EMPTY_NOTIFICATIONS });
       },
       markRead: (id) => {
         set((s) => ({ notifications: s.notifications.map((n) => (n.id === id ? { ...n, read: true } : n)) }));
