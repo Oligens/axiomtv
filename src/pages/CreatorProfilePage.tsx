@@ -39,7 +39,7 @@ export default function CreatorProfilePage() {
   const user = useStore((s) => s.user);
   const openAuth = useStore((s) => s.openAuth);
   const toast = useStore((s) => s.toast);
-  const publications = useStore((s) => s.publications);\n  const updateProfile = useStore((s) => s.updateProfile);\n  const addProfileLink = useStore((s) => s.addProfileLink);\n  const deleteProfileLink = useStore((s) => s.deleteProfileLink);
+  const publications = useStore((s) => s.publications);\n  const updateProfile = useStore((s) => s.updateProfile);\n  const addProfileLink = useStore((s) => s.addProfileLink);\n  const deleteProfileLink = useStore((s) => s.deleteProfileLink);\n  const addProfileLink = useStore((s) => s.addProfileLink);\n  const deleteProfileLink = useStore((s) => s.deleteProfileLink);
 
   const creator = undefined;
   const isOwner = !!user && user.username === handle;
@@ -91,11 +91,22 @@ export default function CreatorProfilePage() {
   };
 
   const addLink = () => {
-    if (!newUrl.trim()) return;
-    setLinks((l) => [...l, { id: Date.now(), platform: newPlatform, url: newUrl.trim() }]);
-    setNewUrl("");
-    setAdding(false);
-    toast("Lien ajouté à l'antenne", "ok");
+    if (!isOwner || !newUrl.trim()) return;
+    void addProfileLink({
+      platform: newPlatform,
+      label: PLATFORMS.find((p) => p.id === newPlatform)?.label ?? newPlatform,
+      url: newUrl.trim(),
+    }).then((result) => {
+      if (!result) {
+        toast("Lien ajouté à l’antenne", "ok");
+        return;
+      }
+      const persistedId = Number(result);
+      setLinks((l) => [...l, { id: Number.isFinite(persistedId) ? persistedId : Date.now(), platform: newPlatform, url: newUrl.trim() }]);
+      setNewUrl("");
+      setAdding(false);
+      toast("Lien ajouté à l’antenne", "ok");
+    });
   };
 
   const subscribe = () => {
