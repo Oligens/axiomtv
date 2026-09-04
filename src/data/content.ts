@@ -116,10 +116,10 @@ export interface IntroMetadata {
 }
 
 export const DEFAULT_INTRO: IntroMetadata = {
-  title: "Transmission",
-  directors: [{ name: "", role: "Réalisation" }],
+  title: "",
+  directors: [],
   cast: [],
-  year: new Date().getFullYear(),
+  year: 0,
 };
 
 /* ================= Audio hybride (pilier 4) ================= */
