@@ -53,7 +53,9 @@ export default function CreatorProfilePage() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
 
-  const isOwner = !!user && !!handle && user.username.toLowerCase() === handle.replace(/^@/, "").toLowerCase() && (!creator || creator.username.toLowerCase() === user.username.toLowerCase());
+  const handleMatches = !!user && !!handle && user.username.toLowerCase() === handle.replace(/^@/, "").toLowerCase();
+  const idMatches = !!user && !!creator && user.id !== undefined && user.id === creator.id;
+  const isOwner = !!user && (idMatches || (handleMatches && (!creator || creator.username.toLowerCase() === user.username.toLowerCase())));
 
   useEffect(() => {
     let cancelled = false;
