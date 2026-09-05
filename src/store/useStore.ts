@@ -133,19 +133,11 @@ export const useStore = create<Store>()(
       login: async (email, password) => {
         if (apiEnabled()) {
           try {
-            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; charter?: string; avatarUrl?: string | null; bannerUrl?: string | null; tier: Tier; verified?: boolean } }>(
-              "/api/auth/login",
-              { method: "POST", body: JSON.stringify({ email, password }) }
-            );
-            set({
-              user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", avatarUrl: r.user.avatarUrl ?? undefined, bannerUrl: r.user.bannerUrl ?? undefined, verified: !!r.user.verified, tier: r.user.tier ?? "free" },
-              authToken: r.token,
-            });
+            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; charter?: string; avatarUrl?: string | null; bannerUrl?: string | null; tier: Tier; verified?: boolean } }>("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+            set({ user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", avatarUrl: r.user.avatarUrl ?? undefined, bannerUrl: r.user.bannerUrl ?? undefined, verified: !!r.user.verified, tier: r.user.tier ?? "free" }, authToken: r.token });
             void get().loadNotifications();
             return null;
-          } catch (e) {
-            return e instanceof Error ? e.message : "Erreur de connexion";
-          }
+          } catch (e) { return e instanceof Error ? e.message : "Erreur de connexion"; }
         }
         const u: User = { username: slug(email), displayName: pretty(slug(email)), email, bio: "", charter: "", verified: false, tier: get().user?.tier ?? "free" };
         set({ user: u, authToken: null, notifications: [] });
@@ -155,19 +147,11 @@ export const useStore = create<Store>()(
       register: async (name, email, password) => {
         if (apiEnabled()) {
           try {
-            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; charter?: string; avatarUrl?: string | null; bannerUrl?: string | null; tier: Tier; verified?: boolean }; welcomeEmail?: boolean }>(
-              "/api/auth/register",
-              { method: "POST", body: JSON.stringify({ name, email, password }) }
-            );
-            set({
-              user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", avatarUrl: r.user.avatarUrl ?? undefined, bannerUrl: r.user.bannerUrl ?? undefined, verified: !!r.user.verified, tier: r.user.tier ?? "free" },
-              authToken: r.token,
-            });
+            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; charter?: string; avatarUrl?: string | null; bannerUrl?: string | null; tier: Tier; verified?: boolean }; welcomeEmail?: boolean }>("/api/auth/register", { method: "POST", body: JSON.stringify({ name, email, password }) });
+            set({ user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", avatarUrl: r.user.avatarUrl ?? undefined, bannerUrl: r.user.bannerUrl ?? undefined, verified: !!r.user.verified, tier: r.user.tier ?? "free" }, authToken: r.token });
             void get().loadNotifications();
             return null;
-          } catch (e) {
-            return e instanceof Error ? e.message : "Erreur lors de l'inscription";
-          }
+          } catch (e) { return e instanceof Error ? e.message : "Erreur lors de l'inscription"; }
         }
         const u: User = { username: slug(email), displayName: name.trim(), email, bio: "", charter: "", verified: false, tier: "free" };
         set({ user: u, authToken: null, notifications: [] });
@@ -181,9 +165,7 @@ export const useStore = create<Store>()(
           try {
             const r = await api<{ user: { id: number; name: string; username: string; email: string; bio?: string; charter?: string; avatarUrl?: string | null; bannerUrl?: string | null; tier: Tier; verified?: boolean } }>("/api/auth/me");
             set({ user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", avatarUrl: r.user.avatarUrl ?? undefined, bannerUrl: r.user.bannerUrl ?? undefined, verified: !!r.user.verified, tier: r.user.tier ?? "free" } });
-          } catch {
-            set({ user: null, authToken: null });
-          }
+          } catch { set({ user: null, authToken: null }); }
         }
         if (get().user) void get().loadNotifications();
       },
@@ -194,22 +176,10 @@ export const useStore = create<Store>()(
         if (!get().user) return "Authentification requise";
         if (apiEnabled() && get().authToken) {
           try {
-            const r = await api<{ user: { id: number; username: string; name: string; email: string; bio?: string; tier: Tier; verified?: boolean; avatarUrl?: string | null; bannerUrl?: string | null; charter?: string | null } }>(
-              "/api/profile",
-              {
-                method: "PATCH",
-                body: JSON.stringify({ name: p.displayName, bio: p.bio, avatarUrl: p.avatarUrl ?? null, bannerUrl: p.bannerUrl ?? null, charter: p.charter ?? null }),
-              }
-            );
-            set((s) => ({
-              user: s.user
-                ? { ...s.user, id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", tier: r.user.tier ?? s.user.tier, verified: !!r.user.verified, avatarUrl: r.user.avatarUrl ?? undefined, bannerUrl: r.user.bannerUrl ?? undefined }
-                : s.user,
-            }));
+            const r = await api<{ user: { id: number; username: string; name: string; email: string; bio?: string; tier: Tier; verified?: boolean; avatarUrl?: string | null; bannerUrl?: string | null; charter?: string | null } }>("/api/profile", { method: "PATCH", body: JSON.stringify({ name: p.displayName, bio: p.bio, avatarUrl: p.avatarUrl ?? null, bannerUrl: p.bannerUrl ?? null, charter: p.charter ?? null }) });
+            set((s) => ({ user: s.user ? { ...s.user, id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", tier: r.user.tier ?? s.user.tier, verified: !!r.user.verified, avatarUrl: r.user.avatarUrl ?? undefined, bannerUrl: r.user.bannerUrl ?? undefined } : s.user }));
             return null;
-          } catch (e) {
-            return e instanceof Error ? e.message : "Impossible de mettre à jour le profil";
-          }
+          } catch (e) { return e instanceof Error ? e.message : "Impossible de mettre à jour le profil"; }
         }
         set((s) => ({ user: s.user ? { ...s.user, ...p } : s.user }));
         return null;
@@ -220,18 +190,15 @@ export const useStore = create<Store>()(
         try {
           const response = await api<{ id: number }>("/api/profile/links", { method: "POST", body: JSON.stringify(link) });
           return String(response.id);
-        } catch (e) {
-          return e instanceof Error ? e.message : "Impossible d'ajouter le lien";
-        }
+        } catch (e) { return e instanceof Error ? e.message : "Impossible d'ajouter le lien"; }
       },
       deleteProfileLink: async (id) => {
-        if (!get().user || !get().authToken || !apiEnabled()) return "Authentification requise";
+        if (!get().user) return "Authentification requise";
+        if (!apiEnabled() || !get().authToken) return null;
         try {
           await api(`/api/profile/links/${id}`, { method: "DELETE" });
           return null;
-        } catch (e) {
-          return e instanceof Error ? e.message : "Impossible de supprimer le lien";
-        }
+        } catch (e) { return e instanceof Error ? e.message : "Impossible de supprimer le lien"; }
       },
 
       notifications: [],
