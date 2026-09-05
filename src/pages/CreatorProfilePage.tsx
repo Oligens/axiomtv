@@ -248,7 +248,7 @@ export default function CreatorProfilePage() {
       <div className="relative -mt-14 px-5 sm:px-8">
         <div className="flex flex-wrap items-end gap-5">
           <span
-            onDragOver={(e) => { if (isOwner) e.preventDefault(); }} onDrop={(e) => onDropImage(e, "avatar")} onClick={() => isOwner && avatarInputRef.current?.click()} className={`font-display grid h-28 w-28 shrink-0 place-items-center rounded-2xl border-4 border-ink text-[34px] font-bold text-white shadow-[0_0_34px_rgba(0,0,0,0.6)] ${isOwner ? "cursor-pointer" : ""} ${dragTarget === "avatar" ? "ring-2 ring-cyan" : ""}`}
+            onDragOver={(e) => { if (isOwner) { e.preventDefault(); setDragTarget("avatar"); } }} onDragLeave={() => setDragTarget(null)} onDrop={(e) => onDropImage(e, "avatar")} onClick={() => isOwner && avatarInputRef.current?.click()} className={`font-display grid h-28 w-28 shrink-0 place-items-center rounded-2xl border-4 border-ink text-[34px] font-bold text-white shadow-[0_0_34px_rgba(0,0,0,0.6)] ${isOwner ? "cursor-pointer" : ""} ${dragTarget === "avatar" ? "ring-2 ring-cyan" : ""}`}
             style={{ background: `linear-gradient(135deg, ${hue}55, ${hueTo}66)`, textShadow: `0 0 18px ${hue}` }}
           >
             {avatarUrl ? <img src={avatarUrl} alt={name} className="h-full w-full rounded-[10px] object-cover" /> : name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
