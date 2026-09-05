@@ -234,7 +234,7 @@ export default function CreatorProfilePage() {
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
         onDragOver={(e) => { if (isOwner) { e.preventDefault(); setDragTarget("banner"); } }} onDragLeave={() => setDragTarget(null)} onDrop={(e) => onDropImage(e, "banner")} className={`scanlines relative mt-4 h-52 overflow-hidden rounded-[22px] border ${dragTarget === "banner" ? "border-cyan/80 ring-2 ring-cyan/30" : "border-white/[0.08]"} md:mt-6 md:h-64`}
       >
-        <div className={`absolute inset-0 bg-gradient-to-br`} style={{ background: bannerUrl ? `linear-gradient(160deg, rgba(10,14,20,.2), rgba(10,14,20,.75)), url(${bannerUrl}) center/cover` : `linear-gradient(120deg, ${hue}33, transparent 45%), linear-gradient(240deg, ${hueTo}3d, transparent 50%), linear-gradient(160deg, #10151d, #0a0e14)` }} />
+        <div className={`absolute inset-0 bg-gradient-to-br`} style={{ background: currentBannerTemplate ? currentBannerTemplate.background : bannerUrl ? `linear-gradient(160deg, rgba(10,14,20,.2), rgba(10,14,20,.75)), url(${bannerUrl}) center/cover` : `linear-gradient(120deg, ${hue}33, transparent 45%), linear-gradient(240deg, ${hueTo}3d, transparent 50%), linear-gradient(160deg, #10151d, #0a0e14)` }} />
         <div className="absolute inset-0" style={{ background: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "34px 34px" }} />
         <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 25% 35%, ${hue}40, transparent 55%)` }} />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink to-transparent" />
