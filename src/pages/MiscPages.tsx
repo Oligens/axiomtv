@@ -123,7 +123,7 @@ export function SettingsPage() {
   const toast = useStore((s) => s.toast);
   const navigate = useNavigate();
 
-  const [prefs, setPrefs] = useState({ notifEpg: true, notifLive: true, notifMentions: false });
+  const [prefs, setPrefs] = useState({ notifEpg: true, notifLive: true, notifMentions: false });\n  const [displayName, setDisplayName] = useState(user?.displayName ?? "");\n  const [charter, setCharter] = useState(user?.charter ?? "");\n  const [savingProfile, setSavingProfile] = useState(false);\n\n  useEffect(() => {\n    setDisplayName(user?.displayName ?? "");\n    setCharter(user?.charter ?? "");\n  }, [user?.displayName, user?.charter]);\n\n  const saveAccountProfile = async () => {\n    if (!user) return;\n    if (!displayName.trim()) { toast("Le nom d’affichage est obligatoire", "warn"); return; }\n    setSavingProfile(true);\n    const error = await updateProfile({ displayName: displayName.trim(), charter: charter.trim() });\n    setSavingProfile(false);\n    if (error) { toast(error, "warn"); return; }\n    toast("Paramètres du profil enregistrés", "ok");\n  };
 
   const rows: { key: keyof typeof prefs; title: string; text: string }[] = [
     { key: "notifEpg", title: "Rappels EPG", text: "Notification push 5 minutes avant chaque direct programmé." },
@@ -134,6 +134,25 @@ export function SettingsPage() {
   return (
     <div className="mx-auto max-w-[820px] pb-16">
       <PageHead kicker="Compte" title={<>Paramètres <span className="text-fog">— @{user?.username}</span></>} text="Notifications, session et préférences du compte." />
+
+      <section className="glass mt-8 rounded-2xl p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="eyebrow text-cyan">Identité de l’antenne</p>
+            <h2 className="mt-1 font-display text-[15px] font-bold text-frost">Profil public</h2>
+            <p className="mt-1 text-[11.5px] text-fog">Ces informations sont visibles sur votre antenne. Seul le propriétaire connecté peut les modifier.</p>
+          </div>
+          {user && <button onClick={() => navigate(`/creator/${user.username}`)} className="btn-ghost rounded-full px-4 py-2 font-display text-[10.5px] font-bold uppercase tracking-[0.12em] text-cyan">Ouvrir mon antenne</button>}
+        </div>
+        <div className="mt-5 grid gap-4">
+          <label className="block"><span className="eyebrow text-fog">Nom d’affichage</span><input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={60} className="field mt-2 w-full rounded-xl px-4 py-3 text-[12px] text-frost" /></label>
+          <label className="block"><span className="eyebrow text-fog">Charte de l’antenne</span><textarea value={charter} onChange={(e) => setCharter(e.target.value)} rows={6} maxLength={1000} placeholder="Définissez les engagements éditoriaux de votre antenne…" className="field mt-2 w-full resize-none rounded-xl px-4 py-3 text-[12px] leading-relaxed text-frost" /></label>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[11px] text-fog">Photo, bannière, modèles AxiomTV et glisser-déposer : utilisez « Ouvrir mon antenne ».</p>
+            <button disabled={savingProfile} onClick={() => void saveAccountProfile()} className="btn-neon rounded-full px-5 py-2.5 font-display text-[11px] font-bold uppercase disabled:opacity-50">{savingProfile ? "Enregistrement…" : "Enregistrer"}</button>
+          </div>
+        </div>
+      </section>
 
       <section className="glass mt-8 rounded-2xl p-6">
         <h2 className="font-display text-[15px] font-bold text-frost">Notifications</h2>
