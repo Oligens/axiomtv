@@ -95,7 +95,7 @@ interface Store {
   boot: () => Promise<void>;
   setTier: (t: Tier) => void;
   updateLocalUser: (p: Partial<User>) => void;
-  updateProfile: (p: Partial<Pick<User, "displayName" | "bio" | "avatarUrl" | "bannerUrl">>) => Promise<string | null>;
+  updateProfile: (p: Partial<Pick<User, "displayName" | "bio" | "avatarUrl" | "bannerUrl" | "charter">>) => Promise<string | null>;
   addProfileLink: (link: { platform: string; label: string; url: string }) => Promise<string | null>;
   deleteProfileLink: (id: number) => Promise<string | null>;
 
@@ -148,7 +148,7 @@ export const useStore = create<Store>()(
               { method: "POST", body: JSON.stringify({ email, password }) }
             );
             set({
-              user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" },
+              user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" },
               authToken: r.token,
             });
             void get().loadNotifications();
