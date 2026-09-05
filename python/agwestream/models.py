@@ -41,7 +41,6 @@ class CameraMovement(str, Enum):
 @dataclass(slots=True)
 class CharacterIdentity:
     """Persistent visual identity used in every shot containing a character."""
-
     id: str
     name: str
     reference_images: list[str] = field(default_factory=list)
@@ -75,7 +74,6 @@ class VehicleState:
 @dataclass(slots=True)
 class SceneState:
     """Continuity state carried from one shot to the next."""
-
     location: str = ""
     environment: str = ""
     time_of_day: str = ""
@@ -128,42 +126,36 @@ class ShotDefinition:
     generated_video: str | None = None
 
     def to_node_plan(self, scene: SceneState) -> dict[str, Any]:
-        """Serialize to the ProductionPlan shape consumed by the TS renderer."""
+        """Serialize strictly to AxiomTV's TypeScript ProductionPlan contract."""
+        movement = {
+            CameraMovement.PUSH_IN: "slow-push", CameraMovement.PULL_OUT: "slow-pull",
+            CameraMovement.TRACKING: "slow-push", CameraMovement.HANDHELD: "static",
+            CameraMovement.CRANE: "slow-push", CameraMovement.DRONE: "slow-push",
+            CameraMovement.VEHICLE_CHASE: "slow-push",
+        }.get(self.movement, self.movement.value)
+        shot_type = self._shot_type()
+        segment_id = int(self.id.split("_")[-1])
         return {
-            "segmentId": int(self.id.split("_")[-1]),
-            "shotType": self._shot_type(),
-            "cameraMovement": self.movement.value,
-            "duration": self.duration,
-            "intensity": float(self.motion.get("intensity", 0.5)),
+            "segmentId": segment_id, "shotType": shot_type, "cameraMovement": movement,
+            "duration": self.duration, "intensity": float(self.motion.get("intensity", 0.5)),
             "environment": scene.environment,
             "continuity": {
-                "characters": list(scene.characters),
-                "environments": [scene.environment] if scene.environment else [],
-                "motifs": list(scene.motifs),
-                "palette": list(scene.palette),
+                "characters": list(scene.characters), "environments": [scene.environment] if scene.environment else [],
+                "motifs": list(scene.motifs), "palette": list(scene.palette),
             },
-            "engines": ["image", "cloud-video"] + (["vfx"] if self.vfx else []),
-            "vfx": list(self.vfx),
+            "engines": ["image", "cloud-video"] + (["vfx"] if self.vfx else []), "vfx": list(self.vfx),
             "prompt": {
-                "segmentId": int(self.id.split("_")[-1]),
-                "description": scene.environment,
-                "shotType": self._shot_type(),
-                "cameraMovement": self.movement.value,
-                "lighting": scene.lighting,
-                "mood": self.motion.get("mood", "neutral"),
-                "colorPalette": list(scene.palette),
-                "vfxElements": list(self.vfx),
-                "aiPrompt": self.prompt,
+                "segmentId": segment_id, "description": scene.environment, "shotType": shot_type,
+                "cameraMovement": movement, "lighting": scene.lighting, "mood": self.motion.get("mood", "neutral"),
+                "colorPalette": list(scene.palette), "vfxElements": list(self.vfx), "aiPrompt": self.prompt,
             },
         }
 
     def _shot_type(self) -> str:
-        mapping = {
-            CameraAngle.LOW: "low-angle", CameraAngle.HIGH: "high-angle",
-            CameraAngle.EYE: "medium", CameraAngle.OVERHEAD: "extreme-wide",
-            CameraAngle.DUTCH: "wide", CameraAngle.POV: "pov",
-        }
-        return mapping[self.angle]
+        return {
+            CameraAngle.LOW: "wide", CameraAngle.HIGH: "wide", CameraAngle.EYE: "medium",
+            CameraAngle.OVERHEAD: "extreme-wide", CameraAngle.DUTCH: "wide", CameraAngle.POV: "medium",
+        }[self.angle]
 
 
 @dataclass(slots=True)
@@ -186,10 +178,6 @@ class ProductionPlan:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "version": self.version,
-            "generatedAt": self.generated_at,
-            "shots": self.shots,
-            "globalStyle": self.global_style,
-            "sceneState": self.scene_state,
-            "source": self.source,
+            "version": self.version, "generatedAt": self.generated_at, "shots": self.shots,
+            "globalStyle": self.global_style, "sceneState": self.scene_state, "source": self.source,
         }
