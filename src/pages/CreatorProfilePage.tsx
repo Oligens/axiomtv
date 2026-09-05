@@ -3,7 +3,7 @@
  * Bannière, bio, charte, liens sociaux (« + Ajouter un lien »), vidéos,
  * abonnement et dons (réservés aux abonnés Pro/Gold).
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -13,6 +13,7 @@ import {
 import { TIER_LABEL, type Tier, type Video } from "../data/axiom";
 import { apiEnabled, useStore } from "../store/useStore";
 import VideoCard from "../components/VideoCard";
+import { AXIOM_BANNER_TEMPLATES } from "../data/profile";
 
 const PLATFORMS: { id: string; label: string; icon: React.ReactNode; placeholder: string }[] = [
   { id: "website", label: "Site web", icon: <Globe size={13} />, placeholder: "https://votre-media.org" },
@@ -34,6 +35,11 @@ interface SocialLink {
 }
 
 const canGift = (t: Tier | undefined) => t === "pro" || t === "gold";
+const BANNER_PREFIX = "axiom-template:";
+const bannerTemplate = (value?: string | null) =>
+  value?.startsWith(BANNER_PREFIX)
+    ? AXIOM_BANNER_TEMPLATES.find((t) => t.id === value.slice(BANNER_PREFIX.length))
+    : undefined;
 
 export default function CreatorProfilePage() {
   const { handle } = useParams();
@@ -108,9 +114,14 @@ export default function CreatorProfilePage() {
   const [subscribed, setSubscribed] = useState(false);
   const [giftOpen, setGiftOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState(user?.displayName ?? "");
   const [editBio, setEditBio] = useState(user?.bio ?? "");
+  const [editCharter, setEditCharter] = useState(user?.charter ?? "");
   const [editAvatar, setEditAvatar] = useState(user?.avatarUrl ?? "");
   const [editBanner, setEditBanner] = useState(user?.bannerUrl ?? "");
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const [dragTarget, setDragTarget] = useState<"avatar" | "banner" | null>(null);
 
   useEffect(() => { setLinks(publicLinks); }, [publicLinks]);
 
@@ -143,15 +154,39 @@ export default function CreatorProfilePage() {
   const tier: Tier = creator?.tier ?? user?.tier ?? "free";
   const avatarUrl = creator?.avatarUrl ?? user?.avatarUrl;
   const bannerUrl = creator?.bannerUrl ?? user?.bannerUrl;
+  const currentBannerTemplate = bannerTemplate(bannerUrl);
+  const charter = creator?.charter ?? user?.charter ?? "";
 
   const saveProfile = () => {
     if (!isOwner || !user) return;
-    void updateProfile({ bio: editBio.trim(), avatarUrl: editAvatar.trim() || undefined, bannerUrl: editBanner.trim() || undefined }).then((error) => {
+    const displayName = editName.trim();
+    if (!displayName) { toast("Le nom de profil est obligatoire", "warn"); return; }
+    void updateProfile({ displayName, bio: editBio.trim(), charter: editCharter.trim(), avatarUrl: editAvatar.trim() || undefined, bannerUrl: editBanner.trim() || undefined }).then((error) => {
       if (error) { toast(error, "warn"); return; }
-      setCreator((current) => current ? { ...current, bio: editBio.trim(), avatarUrl: editAvatar.trim() || null, bannerUrl: editBanner.trim() || null } : current);
+      setCreator((current) => current ? { ...current, name: displayName, bio: editBio.trim(), charter: editCharter.trim(), avatarUrl: editAvatar.trim() || null, bannerUrl: editBanner.trim() || null } : current);
       setEditOpen(false);
       toast("Profil mis à jour", "ok");
     });
+  };
+
+  const readImage = (file: File, target: "avatar" | "banner") => {
+    if (!isOwner || !file.type.startsWith("image/")) { toast("Veuillez sélectionner une image valide", "warn"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast("Image trop volumineuse (5 Mo maximum)", "warn"); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = typeof reader.result === "string" ? reader.result : "";
+      if (target === "avatar") setEditAvatar(value); else setEditBanner(value);
+      toast(target === "avatar" ? "Photo chargée" : "Bannière chargée", "ok");
+    };
+    reader.onerror = () => toast("Impossible de lire cette image", "warn");
+    reader.readAsDataURL(file);
+  };
+
+  const onDropImage = (event: React.DragEvent<HTMLElement>, target: "avatar" | "banner") => {
+    event.preventDefault();
+    setDragTarget(null);
+    const file = event.dataTransfer.files?.[0];
+    if (file) readImage(file, target);
   };
 
   const addLink = () => {
@@ -197,12 +232,13 @@ export default function CreatorProfilePage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className="scanlines relative mt-4 h-52 overflow-hidden rounded-[22px] border border-white/[0.08] md:mt-6 md:h-64"
+        onDragOver={(e) => { if (isOwner) { e.preventDefault(); setDragTarget("banner"); } }} onDragLeave={() => setDragTarget(null)} onDrop={(e) => onDropImage(e, "banner")} className={`scanlines relative mt-4 h-52 overflow-hidden rounded-[22px] border ${dragTarget === "banner" ? "border-cyan/80 ring-2 ring-cyan/30" : "border-white/[0.08]"} md:mt-6 md:h-64`}
       >
         <div className={`absolute inset-0 bg-gradient-to-br`} style={{ background: bannerUrl ? `linear-gradient(160deg, rgba(10,14,20,.2), rgba(10,14,20,.75)), url(${bannerUrl}) center/cover` : `linear-gradient(120deg, ${hue}33, transparent 45%), linear-gradient(240deg, ${hueTo}3d, transparent 50%), linear-gradient(160deg, #10151d, #0a0e14)` }} />
         <div className="absolute inset-0" style={{ background: "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)", backgroundSize: "34px 34px" }} />
         <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 25% 35%, ${hue}40, transparent 55%)` }} />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink to-transparent" />
+        <span className="font-display absolute left-4 top-4 z-10 rounded-lg border border-white/15 bg-black/35 px-3 py-1.5 text-[11px] font-black tracking-[0.18em] text-white backdrop-blur-sm">AXIOMTV</span>
         <span className="font-display absolute right-4 top-4 flex items-center gap-1.5 rounded-full border border-white/15 bg-abyss/70 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-frost backdrop-blur-sm">
           <BadgeCheck size={12} className="text-cyan" /> Antenne indépendante
         </span>
@@ -212,10 +248,11 @@ export default function CreatorProfilePage() {
       <div className="relative -mt-14 px-5 sm:px-8">
         <div className="flex flex-wrap items-end gap-5">
           <span
-            className="font-display grid h-28 w-28 shrink-0 place-items-center rounded-2xl border-4 border-ink text-[34px] font-bold text-white shadow-[0_0_34px_rgba(0,0,0,0.6)]"
+            onDragOver={(e) => { if (isOwner) e.preventDefault(); }} onDrop={(e) => onDropImage(e, "avatar")} onClick={() => isOwner && avatarInputRef.current?.click()} className={`font-display grid h-28 w-28 shrink-0 place-items-center rounded-2xl border-4 border-ink text-[34px] font-bold text-white shadow-[0_0_34px_rgba(0,0,0,0.6)] ${isOwner ? "cursor-pointer" : ""} ${dragTarget === "avatar" ? "ring-2 ring-cyan" : ""}`}
             style={{ background: `linear-gradient(135deg, ${hue}55, ${hueTo}66)`, textShadow: `0 0 18px ${hue}` }}
           >
             {avatarUrl ? <img src={avatarUrl} alt={name} className="h-full w-full rounded-[10px] object-cover" /> : name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+            {isOwner && <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) readImage(file, "avatar"); e.currentTarget.value = ""; }} />}
           </span>
           <div className="min-w-0 flex-1 pb-1">
             <div className="flex flex-wrap items-center gap-2.5">
@@ -233,7 +270,7 @@ export default function CreatorProfilePage() {
           {/* actions : propriétaire = édition, visiteur = abonnement/don */}
           <div className="flex items-center gap-2.5 pb-1">
             {isOwner ? (
-              <button onClick={() => { setEditBio(bio); setEditAvatar(avatarUrl ?? ""); setEditBanner(bannerUrl ?? ""); setEditOpen(true); }} className="btn-neon rounded-full px-5 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.14em]">Modifier le profil</button>
+              <button onClick={() => { setEditName(name); setEditBio(bio); setEditCharter(charter); setEditAvatar(avatarUrl ?? ""); setEditBanner(bannerUrl ?? ""); setEditOpen(true); }} className="btn-neon rounded-full px-5 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.14em]">Modifier le profil</button>
             ) : (
               <>
                 <button onClick={subscribe} className={`flex items-center gap-2 rounded-full px-5 py-2.5 font-display text-[12px] font-bold uppercase tracking-[0.14em] transition-all ${subscribed ? "border border-mint/50 bg-mint/12 text-mint" : "btn-neon"}`}>{subscribed ? "Abonné ✓" : "S’abonner"}</button>
@@ -318,10 +355,8 @@ export default function CreatorProfilePage() {
         <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
           <div className="glass rounded-2xl p-6">
             <p className="eyebrow text-cyan">Charte de l'antenne</p>
-            <p className="mt-3 text-[12.5px] leading-relaxed text-fog">
-              « Cette antenne s'engage à publier sans censure, à citer ses sources, à corriger ses erreurs en toute visibilité et à refuser tout financement qui conditionnerait l'information. Les revenus proviennent uniquement de la communauté : abonnements, dons et contenus à l'unité. »
-            </p>
-            <p className="font-display mt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-fog/70">Signée par @{handle} · vérifiée par le collège communautaire</p>
+            <p className="mt-3 whitespace-pre-wrap text-[12.5px] leading-relaxed text-fog">{charter || "Cette antenne n’a pas encore publié sa charte."}</p>
+            {isOwner && <p className="font-display mt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan/70">Visible publiquement · modifiable par le propriétaire</p>}
           </div>
           <div className="glass rounded-2xl p-6">
             <p className="eyebrow text-fog">Informations</p>
@@ -360,8 +395,17 @@ export default function CreatorProfilePage() {
           <div className="glass-deep w-full max-w-xl rounded-2xl border border-white/10 p-6 shadow-2xl">
             <div className="flex items-center justify-between gap-4"><div><p className="eyebrow text-cyan">Mon antenne</p><h2 id="edit-profile-title" className="mt-1 font-display text-xl font-bold text-white">Modifier le profil</h2></div><button onClick={() => setEditOpen(false)} className="btn-ghost rounded-full px-3 py-2 text-fog">Fermer</button></div>
             <div className="mt-6 space-y-4">
+              <label className="block"><span className="eyebrow text-fog">Nom d’affichage</span><input value={editName} onChange={(e) => setEditName(e.target.value)} maxLength={80} className="field mt-2 w-full rounded-xl px-4 py-3 text-[12px] text-frost" /></label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div onDragOver={(e) => { e.preventDefault(); setDragTarget("avatar"); }} onDragLeave={() => setDragTarget(null)} onDrop={(e) => onDropImage(e, "avatar")} className={dragTarget === "avatar" ? "rounded-xl border border-cyan bg-cyan/10 p-4" : "rounded-xl border border-dashed border-white/10 p-4"}><p className="eyebrow text-fog">Photo de profil</p><button type="button" onClick={() => avatarInputRef.current?.click()} className="btn-ghost mt-2 rounded-lg px-3 py-2 text-[11px] font-bold">Choisir une image</button></div>
+                <div onDragOver={(e) => { e.preventDefault(); setDragTarget("banner"); }} onDragLeave={() => setDragTarget(null)} onDrop={(e) => onDropImage(e, "banner")} className={dragTarget === "banner" ? "rounded-xl border border-cyan bg-cyan/10 p-4" : "rounded-xl border border-dashed border-white/10 p-4"}><p className="eyebrow text-fog">Bannière</p><button type="button" onClick={() => bannerInputRef.current?.click()} className="btn-ghost mt-2 rounded-lg px-3 py-2 text-[11px] font-bold">Choisir une image</button></div>
+              </div>
+              <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) readImage(file, "avatar"); e.currentTarget.value = ""; }} />
+              <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) readImage(file, "banner"); e.currentTarget.value = ""; }} />
               <label className="block"><span className="eyebrow text-fog">Photo de profil — URL</span><input value={editAvatar} onChange={(e) => setEditAvatar(e.target.value)} placeholder="https://..." className="field mt-2 w-full rounded-xl px-4 py-3 text-[12px] text-frost" /></label>
-              <label className="block"><span className="eyebrow text-fog">Bannière — URL</span><input value={editBanner} onChange={(e) => setEditBanner(e.target.value)} placeholder="https://..." className="field mt-2 w-full rounded-xl px-4 py-3 text-[12px] text-frost" /></label>
+              <label className="block"><span className="eyebrow text-fog">Bannière — URL ou modèle</span><input value={editBanner} onChange={(e) => setEditBanner(e.target.value)} placeholder="https://..." className="field mt-2 w-full rounded-xl px-4 py-3 text-[12px] text-frost" /></label>
+              <div><p className="eyebrow text-fog">20 modèles de bannière AxiomTV</p><div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">{AXIOM_BANNER_TEMPLATES.map((template) => <button type="button" key={template.id} onClick={() => setEditBanner(BANNER_PREFIX + template.id)} className={editBanner === BANNER_PREFIX + template.id ? "relative h-16 overflow-hidden rounded-lg border border-cyan ring-2 ring-cyan/30" : "relative h-16 overflow-hidden rounded-lg border border-white/10"} style={{ background: template.background }}><span className="absolute inset-x-2 bottom-2 text-[8px] font-black tracking-wider text-white drop-shadow">{template.name}</span><span className="absolute right-2 top-2 text-[7px] font-black text-white/80">AXIOMTV</span></button>)}</div></div>
+              <label className="block"><span className="eyebrow text-fog">Charte de l’antenne</span><textarea value={editCharter} onChange={(e) => setEditCharter(e.target.value)} rows={6} maxLength={3000} placeholder="Définissez les engagements éditoriaux de votre antenne…" className="field mt-2 w-full resize-none rounded-xl px-4 py-3 text-[12px] leading-relaxed text-frost" /></label>
               <label className="block"><span className="eyebrow text-fog">Biographie</span><textarea value={editBio} onChange={(e) => setEditBio(e.target.value)} rows={5} placeholder="Cette antenne n’a pas encore rédigé sa biographie." className="field mt-2 w-full resize-none rounded-xl px-4 py-3 text-[12px] leading-relaxed text-frost" /></label>
             </div>
             <div className="mt-6 flex justify-end gap-2"><button onClick={() => setEditOpen(false)} className="btn-ghost rounded-full px-5 py-2.5 text-[11px] font-bold uppercase text-fog">Annuler</button><button onClick={saveProfile} className="btn-neon rounded-full px-5 py-2.5 text-[11px] font-bold uppercase">Enregistrer</button></div>
