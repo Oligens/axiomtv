@@ -2,9 +2,7 @@
   "name": "axiomtv",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": "22.x"
-  },
+  "engines": { "node": "22.x" },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "render:scifi": "tsx src/server/rendering/index.ts",
-    "render:scifi:check": "tsx src/server/rendering/index.ts --check"
+    "render:scifi:check": "tsx src/server/rendering/index.ts --check",
+    "agwe:plan": "python -m python.agwestream.cli"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
