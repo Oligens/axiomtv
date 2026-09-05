@@ -143,7 +143,7 @@ export const useStore = create<Store>()(
       login: async (email, password) => {
         if (apiEnabled()) {
           try {
-            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; tier: Tier; verified?: boolean } }>(
+            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; charter?: string; tier: Tier; verified?: boolean } }>(
               "/api/auth/login",
               { method: "POST", body: JSON.stringify({ email, password }) }
             );
@@ -165,12 +165,12 @@ export const useStore = create<Store>()(
       register: async (name, email, password) => {
         if (apiEnabled()) {
           try {
-            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; tier: Tier; verified?: boolean }; welcomeEmail?: boolean }>(
+            const r = await api<{ token: string; user: { id: number; name: string; username: string; email: string; bio?: string; charter?: string; tier: Tier; verified?: boolean }; welcomeEmail?: boolean }>(
               "/api/auth/register",
               { method: "POST", body: JSON.stringify({ name, email, password }) }
             );
             set({
-              user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" },
+              user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" },
               authToken: r.token,
             });
             void get().loadNotifications();
@@ -189,8 +189,8 @@ export const useStore = create<Store>()(
       boot: async () => {
         if (apiEnabled() && get().authToken) {
           try {
-            const r = await api<{ user: { name: string; username: string; email: string; bio?: string; tier: Tier; verified?: boolean } }>("/api/auth/me");
-            set({ user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" } });
+            const r = await api<{ user: { name: string; username: string; email: string; bio?: string; charter?: string; tier: Tier; verified?: boolean } }>("/api/auth/me");
+            set({ user: { id: r.user.id, username: r.user.username, displayName: r.user.name, email: r.user.email, bio: r.user.bio ?? "", charter: r.user.charter ?? "", verified: !!r.user.verified, tier: r.user.tier ?? "free" } });
           } catch {
             set({ user: null, authToken: null });
           }
@@ -204,7 +204,7 @@ export const useStore = create<Store>()(
         if (!get().user) return "Authentification requise";
         if (apiEnabled() && get().authToken) {
           try {
-            const r = await api<{ user: { id: number; username: string; name: string; email: string; bio?: string; tier: Tier; verified?: boolean; avatarUrl?: string | null; bannerUrl?: string | null } }>(
+            const r = await api<{ user: { id: number; username: string; name: string; email: string; bio?: string; tier: Tier; verified?: boolean; avatarUrl?: string | null; bannerUrl?: string | null; charter?: string | null } }>(
               "/api/profile",
               {
                 method: "PATCH",
@@ -213,6 +213,7 @@ export const useStore = create<Store>()(
                   bio: p.bio,
                   avatarUrl: p.avatarUrl ?? null,
                   bannerUrl: p.bannerUrl ?? null,
+                  charter: p.charter ?? null,
                 }),
               }
             );
