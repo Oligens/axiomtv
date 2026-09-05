@@ -171,7 +171,7 @@ export default function CreatorProfilePage() {
 
   const readImage = (file: File, target: "avatar" | "banner") => {
     if (!isOwner || !file.type.startsWith("image/")) { toast("Veuillez sélectionner une image valide", "warn"); return; }
-    if (file.size > 5 * 1024 * 1024) { toast("Image trop volumineuse (5 Mo maximum)", "warn"); return; }
+    if (file.size > 1.4 * 1024 * 1024) { toast("Image trop volumineuse (1,4 Mo maximum)", "warn"); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const value = typeof reader.result === "string" ? reader.result : "";
