@@ -123,7 +123,25 @@ export function SettingsPage() {
   const toast = useStore((s) => s.toast);
   const navigate = useNavigate();
 
-  const [prefs, setPrefs] = useState({ notifEpg: true, notifLive: true, notifMentions: false });\n  const [displayName, setDisplayName] = useState(user?.displayName ?? "");\n  const [charter, setCharter] = useState(user?.charter ?? "");\n  const [savingProfile, setSavingProfile] = useState(false);\n\n  useEffect(() => {\n    setDisplayName(user?.displayName ?? "");\n    setCharter(user?.charter ?? "");\n  }, [user?.displayName, user?.charter]);\n\n  const saveAccountProfile = async () => {\n    if (!user) return;\n    if (!displayName.trim()) { toast("Le nom d’affichage est obligatoire", "warn"); return; }\n    setSavingProfile(true);\n    const error = await updateProfile({ displayName: displayName.trim(), charter: charter.trim() });\n    setSavingProfile(false);\n    if (error) { toast(error, "warn"); return; }\n    toast("Paramètres du profil enregistrés", "ok");\n  };
+  const [prefs, setPrefs] = useState({ notifEpg: true, notifLive: true, notifMentions: false });
+  const [displayName, setDisplayName] = useState(user?.displayName ?? "");
+  const [charter, setCharter] = useState(user?.charter ?? "");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    setDisplayName(user?.displayName ?? "");
+    setCharter(user?.charter ?? "");
+  }, [user?.displayName, user?.charter]);
+
+  const saveAccountProfile = async () => {
+    if (!user) return;
+    if (!displayName.trim()) { toast("Le nom d’affichage est obligatoire", "warn"); return; }
+    setSavingProfile(true);
+    const error = await updateProfile({ displayName: displayName.trim(), charter: charter.trim() });
+    setSavingProfile(false);
+    if (error) { toast(error, "warn"); return; }
+    toast("Paramètres du profil enregistrés", "ok");
+  };
 
   const rows: { key: keyof typeof prefs; title: string; text: string }[] = [
     { key: "notifEpg", title: "Rappels EPG", text: "Notification push 5 minutes avant chaque direct programmé." },
