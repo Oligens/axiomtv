@@ -32,7 +32,8 @@ async function initDb() {
 
 const publicUser = (u) => ({
   id: u.id, email: u.email, username: u.username, name: u.name,
-  bio: u.bio || "", tier: u.tier, verified: u.verified, avatarUrl: u.avatar_url || null,
+  bio: u.bio || "", charter: u.charter || "", tier: u.tier, verified: u.verified,
+  avatarUrl: u.avatar_url || null, bannerUrl: u.banner_url || null,
 });
 
 function requireAuth(req, res, next) {
