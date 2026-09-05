@@ -121,6 +121,7 @@ export function SettingsPage() {
   const user = useStore((s) => s.user);
   const logout = useStore((s) => s.logout);
   const toast = useStore((s) => s.toast);
+  const updateProfile = useStore((s) => s.updateProfile);
   const navigate = useNavigate();
 
   const [prefs, setPrefs] = useState({ notifEpg: true, notifLive: true, notifMentions: false });
